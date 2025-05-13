@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, User } from 'lucide-react';
+import { Calendar, User, Edit, PlusCircle } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
@@ -60,8 +60,11 @@ const BlogPage: React.FC = () => {
           {/* Admin Actions */}
           {isAdmin && (
             <div className="mb-8">
-              <Link to="/admin/blog/new">
-                <Button className="text-white">Créer un nouvel article</Button>
+              <Link to="/blog/new">
+                <Button className="text-white flex items-center">
+                  <PlusCircle size={18} className="mr-2" />
+                  Créer un nouvel article
+                </Button>
               </Link>
             </div>
           )}
@@ -168,6 +171,16 @@ const BlogPage: React.FC = () => {
                             ? 'Mis à jour le ' + new Date(post.updated_at).toLocaleDateString('fr-FR')
                             : 'Publié le ' + new Date(post.published_at).toLocaleDateString('fr-FR')}
                         </span>
+                        
+                        {/* Bouton d'édition pour les administrateurs */}
+                        {isAdmin && (
+                          <Link to={`/blog/edit/${post.slug}`} className="ml-2">
+                            <button className="text-blue-600 hover:text-blue-800 flex items-center text-xs bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
+                              <Edit size={12} className="mr-1" />
+                              Éditer
+                            </button>
+                          </Link>
+                        )}
                       </div>
                       <div>
                         {post.tags.slice(0, 2).map((tag, index) => (

@@ -140,7 +140,7 @@ const BlogPostPage: React.FC = () => {
             {/* Admin Actions */}
             {isAdmin && (
               <div className="flex justify-end mb-6 space-x-3">
-                <Link to={`/admin/blog/edit/${post.slug}`}>
+                <Link to={`/blog/edit/${post.slug}`}>
                   <Button variant="outline" size="sm">
                     <Edit size={16} className="mr-2" />
                     Modifier

@@ -49,12 +49,17 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/:slug" element={<BlogPostPage />} />
+          <Route path="/blog/new" element={
+            <ProtectedRoute>
+              <CreateBlogPostPage />
+            </ProtectedRoute>
+          } />
           <Route path="/blog/edit/:slug" element={
             <ProtectedRoute>
               <EditBlogPostPage />
             </ProtectedRoute>
           } />
+          <Route path="/blog/:slug" element={<BlogPostPage />} />
           <Route path="/about" element={<AboutPage />} />
           
           {/* Protected User Routes */}
