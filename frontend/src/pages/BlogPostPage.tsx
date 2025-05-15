@@ -6,7 +6,12 @@ import Button from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { blogApi } from '../services/blogApi';
 import { BlogPost } from '../types/blog';
+import { uploadApi } from '../services/uploadApi';
 import toast from 'react-hot-toast';
+import CommentsSection from '../components/comments/CommentsSection';
+import LikeButton from '../components/blog/LikeButton';
+import SEOMetadata from '../components/seo/SEOMetadata';
+import { BlogPostSchema } from '../components/seo/JsonLdSchema';
 
 const BlogPostPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -23,6 +28,8 @@ const BlogPostPage: React.FC = () => {
       setIsLoading(true);
       try {
         const postData = await blogApi.getPostBySlug(slug);
+        console.log('Données du post récupérées:', postData);
+        console.log('Contenu du post:', postData.content);
         setPost(postData);
         setError(null);
       } catch (err) {
@@ -95,13 +102,54 @@ const BlogPostPage: React.FC = () => {
     );
   }
 
+  // Extraire les mots-clés à partir des tags
+  const keywords = post?.tags ? (Array.isArray(post.tags) ? 
+    post.tags.map(tag => typeof tag === 'string' ? tag : tag.name) : 
+    []) : [];
+  
+  // URL complète de l'article
+  const siteUrl = window.location.origin;
+  const postUrl = `${siteUrl}/blog/${slug}`;
+  
+  // Formater les dates pour le SEO
+  const publishedDate = post?.published_at ? new Date(post.published_at).toISOString() : '';
+  const modifiedDate = post?.updated_at ? new Date(post.updated_at).toISOString() : publishedDate;
+  
   return (
     <MainLayout>
+      {post && (
+        <>
+          <SEOMetadata 
+            title={post.title}
+            description={post.excerpt || `${post.title} - Code & Sens`}
+            keywords={keywords}
+            ogImage={post.cover_image}
+            ogType="article"
+            canonicalUrl={`/blog/${slug}`}
+            author={post.author?.full_name || 'Code & Sens'}
+            publishedTime={publishedDate}
+            modifiedTime={modifiedDate}
+          />
+          
+          <BlogPostSchema
+            title={post.title}
+            description={post.excerpt || `${post.title} - Code & Sens`}
+            datePublished={publishedDate}
+            dateModified={modifiedDate}
+            authorName={post.author?.full_name || 'Code & Sens'}
+            imageUrl={post.cover_image}
+            url={postUrl}
+            siteName="Code & Sens"
+            keywords={keywords}
+            category={typeof post.category === 'string' ? post.category : post.category?.name}
+          />
+        </>
+      )}
       <article className="pb-16">
         {/* Hero Section */}
         <div className="relative h-96 bg-blue-900">
           <img
-            src={post.cover_image || 'https://via.placeholder.com/800x400?text=Code%26Sens'}
+            src={post.cover_image ? uploadApi.getImageUrl(post.cover_image) : 'https://via.placeholder.com/800x400?text=Code%26Sens'}
             alt={post.title}
             className="w-full h-full object-cover opacity-30"
           />
@@ -128,7 +176,9 @@ const BlogPostPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center justify-center">
-                <span className="bg-blue-600 px-3 py-1 rounded">{post.category}</span>
+                <span className="bg-blue-600 px-3 py-1 rounded">
+                  {typeof post.category === 'string' ? post.category : post.category.name}
+                </span>
               </div>
             </div>
           </div>
@@ -140,7 +190,7 @@ const BlogPostPage: React.FC = () => {
             {/* Admin Actions */}
             {isAdmin && (
               <div className="flex justify-end mb-6 space-x-3">
-                <Link to={`/blog/edit/${post.slug}`}>
+                <Link to={`/admin/blog/edit/${post.slug}`}>
                   <Button variant="outline" size="sm">
                     <Edit size={16} className="mr-2" />
                     Modifier
@@ -160,8 +210,15 @@ const BlogPostPage: React.FC = () => {
             
             {/* Content */}
             <div className="prose prose-lg max-w-none blog-content">
+              {/* Les logs sont visibles uniquement dans la console du navigateur */}
               <div 
-                dangerouslySetInnerHTML={{ __html: post.content }} 
+                dangerouslySetInnerHTML={{ 
+                  __html: post.content.replace(/src="\/static\/uploads/g, src => {
+                    // Extraire le chemin d'image et utiliser uploadApi.getImageUrl
+                    const path = src.replace('src="', '');
+                    return `src="${uploadApi.getImageUrl(path)}`;
+                  }) 
+                }} 
                 className="blog-content-inner"
               />
             </div>
@@ -170,26 +227,32 @@ const BlogPostPage: React.FC = () => {
             <div className="mt-8 flex flex-wrap gap-2">
               {post.tags.map(tag => (
                 <span
-                  key={tag}
+                  key={typeof tag === 'string' ? tag : tag._id}
                   className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
                 >
-                  {tag}
+                  {typeof tag === 'string' ? tag : tag.name}
                 </span>
               ))}
             </div>
             
-            {/* Share */}
+            {/* Share and Like */}
             <div className="mt-8 border-t border-b border-gray-200 py-4">
-              <div className="flex items-center">
-                <span className="font-medium mr-4">Partager:</span>
-                <button 
-                  onClick={handleShare}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <Share2 size={20} />
-                </button>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <span className="font-medium mr-4">Partager:</span>
+                  <button 
+                    onClick={handleShare}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
+                    <Share2 size={20} />
+                  </button>
+                </div>
+                <LikeButton postId={post._id} />
               </div>
             </div>
+            
+            {/* Comments Section */}
+            <CommentsSection postId={post._id} />
           </div>
         </div>
       </article>

@@ -18,6 +18,28 @@ import CreateBlogPostPage from './pages/CreateBlogPostPage';
 import EditBlogPostPage from './pages/EditBlogPostPage';
 import AboutPage from './pages/AboutPage';
 
+// Pages admin du blog
+import BlogPostsPage from './pages/admin/BlogPostsPage';
+import BlogCategoriesPage from './pages/admin/BlogCategoriesPage';
+import BlogCommentsPage from './pages/admin/BlogCommentsPage';
+import BlogPostPreviewPage from './pages/admin/BlogPostPreviewPage';
+
+// Pages admin du mentorat
+import {
+  SessionsPage,
+  DisponibilitesPage,
+  VideoCallPage,
+  TarifsPage,
+  MentoresPage
+} from './pages/admin/mentorat';
+
+// Pages admin générales
+import AdminOverviewPage from './pages/admin/AdminOverviewPage';
+import AdminCoursesPage from './pages/admin/AdminCoursesPage';
+import AdminUsersPage from './pages/admin/AdminUsersPage';
+import AdminMentoringPage from './pages/admin/AdminMentoringPage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+
 // Protected route component
 const ProtectedRoute: React.FC<{ 
   children: React.ReactNode; 
@@ -49,13 +71,9 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/blog" element={<BlogPage />} />
-          <Route path="/blog/new" element={
-            <ProtectedRoute>
-              <CreateBlogPostPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/blog/edit/:slug" element={
-            <ProtectedRoute>
+
+          <Route path="/admin/blog/edit/:slug" element={
+            <ProtectedRoute requireAdmin>
               <EditBlogPostPage />
             </ProtectedRoute>
           } />
@@ -94,6 +112,133 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <CreateBlogPostPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Routes admin générales */}
+          <Route 
+            path="/admin/overview" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminOverviewPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/courses" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminCoursesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminUsersPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentoring" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminMentoringPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/settings" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminSettingsPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Routes admin pour la gestion du blog */}
+          <Route 
+            path="/admin/blog/posts" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <BlogPostsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/blog/categories" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <BlogCategoriesPage />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="/admin/blog/comments" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <BlogCommentsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/blog/preview/:slug" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <BlogPostPreviewPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Routes admin pour la gestion du mentorat */}
+          <Route 
+            path="/admin/mentorat/sessions" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <SessionsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentorat/disponibilites" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <DisponibilitesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentorat/videocall" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <VideoCallPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentorat/videocall/:sessionId" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <VideoCallPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentorat/tarifs" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <TarifsPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/mentorat/mentores" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <MentoresPage />
               </ProtectedRoute>
             } 
           />

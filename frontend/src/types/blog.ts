@@ -1,3 +1,20 @@
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Tag {
+  _id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface BlogPost {
   _id: string;
   title: string;
@@ -6,8 +23,8 @@ export interface BlogPost {
   excerpt: string;
   cover_image?: string;
   author_id: string;
-  category: string;
-  tags: string[];
+  category: string | Category; // Peut être un ID de catégorie ou un objet Category complet
+  tags: string[] | Tag[]; // Peut être des IDs de tags ou des objets Tag complets
   published_at: string;
   updated_at: string;
   author?: {

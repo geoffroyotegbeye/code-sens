@@ -5,14 +5,15 @@ import MainLayout from '../components/layout/MainLayout';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
 import { blogApi } from '../services/blogApi';
-import { BlogPost } from '../types/blog';
+import { BlogPost, Category } from '../types/blog';
+import { uploadApi } from '../services/uploadApi';
 import toast from 'react-hot-toast';
 
 const BlogPage: React.FC = () => {
   const { isAdmin } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<(string | Category)[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
   // Récupérer les articles et les catégories
@@ -22,7 +23,9 @@ const BlogPage: React.FC = () => {
       try {
         // Récupérer les catégories
         const categoriesData = await blogApi.getCategories();
-        setCategories(categoriesData);
+        // Extraire les noms des catégories pour l'affichage
+        const categoryNames = categoriesData.map(cat => typeof cat === 'string' ? cat : cat.name);
+        setCategories(categoryNames);
         
         // Récupérer les articles
         const postsData = await blogApi.getAllPosts(0, 20, selectedCategory || undefined);
@@ -60,7 +63,7 @@ const BlogPage: React.FC = () => {
           {/* Admin Actions */}
           {isAdmin && (
             <div className="mb-8">
-              <Link to="/blog/new">
+              <Link to="/admin/blog/new">
                 <Button className="text-white flex items-center">
                   <PlusCircle size={18} className="mr-2" />
                   Créer un nouvel article
@@ -81,19 +84,23 @@ const BlogPage: React.FC = () => {
             >
               Tous les articles
             </button>
-            {categories.map(category => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
+            {categories.map(category => {
+              // Assurons-nous que category est une chaîne de caractères
+              const categoryName = typeof category === 'string' ? category : category.name;
+              return (
+                <button
+                  key={typeof category === 'string' ? category : category._id}
+                  onClick={() => setSelectedCategory(categoryName)}
+                  className={`px-4 py-2 rounded-full text-sm transition-colors ${
+                    selectedCategory === categoryName
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {categoryName}
+                </button>
+              );
+            })}
           </div>
 
           {/* Blog Posts */}
@@ -117,12 +124,12 @@ const BlogPage: React.FC = () => {
                   <Link to={`/blog/${post.slug}`}>
                     <div className="relative h-48">
                       <img
-                        src={post.cover_image || 'https://via.placeholder.com/800x400?text=Code%26Sens'}
+                        src={post.cover_image ? uploadApi.getImageUrl(post.cover_image) : 'https://via.placeholder.com/800x400?text=Code%26Sens'}
                         alt={post.title}
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute top-4 right-4 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                        {post.category}
+                        {typeof post.category === 'string' ? post.category : post.category.name}
                       </div>
                     </div>
                   </Link>
@@ -174,7 +181,7 @@ const BlogPage: React.FC = () => {
                         
                         {/* Bouton d'édition pour les administrateurs */}
                         {isAdmin && (
-                          <Link to={`/blog/edit/${post.slug}`} className="ml-2">
+                          <Link to={`/admin/blog/edit/${post.slug}`} className="ml-2">
                             <button className="text-blue-600 hover:text-blue-800 flex items-center text-xs bg-blue-50 hover:bg-blue-100 px-2 py-1 rounded transition-colors">
                               <Edit size={12} className="mr-1" />
                               Éditer
@@ -185,7 +192,7 @@ const BlogPage: React.FC = () => {
                       <div>
                         {post.tags.slice(0, 2).map((tag, index) => (
                           <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded ml-1">
-                            {tag}
+                            {typeof tag === 'string' ? tag : tag.name}
                           </span>
                         ))}
                       </div>

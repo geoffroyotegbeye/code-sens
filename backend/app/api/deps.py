@@ -70,3 +70,14 @@ async def get_current_active_user(current_user: UserInDB = Depends(get_current_u
     #         detail="Utilisateur inactif",
     #     )
     return current_user
+
+async def get_current_admin_user(current_user: UserInDB = Depends(get_current_user)) -> UserInDB:
+    """
+    Vérifie que l'utilisateur est un administrateur.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Droits d'administrateur requis",
+        )
+    return current_user

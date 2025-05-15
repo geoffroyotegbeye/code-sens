@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, UserResponse } from '../services/api';
+import { authService, UserResponse, AUTH_EVENTS } from '../services/api';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
@@ -26,6 +26,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else {
       setLoading(false);
     }
+  }, []);
+  
+  // Écouter l'événement de déconnexion forcée
+  useEffect(() => {
+    const handleForceLogout = () => {
+      setUser(null);
+      // Au lieu d'utiliser useNavigate, nous allons rediriger avec window.location
+      window.location.href = '/login';
+      toast.error('Votre session a expiré. Veuillez vous reconnecter.');
+    };
+    
+    window.addEventListener(AUTH_EVENTS.FORCE_LOGOUT, handleForceLogout);
+    
+    return () => {
+      window.removeEventListener(AUTH_EVENTS.FORCE_LOGOUT, handleForceLogout);
+    };
   }, []);
 
   const fetchCurrentUser = async () => {

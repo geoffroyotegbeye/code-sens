@@ -1,13 +1,354 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { Plus, Users, BookOpen, Calendar, BarChart2, Settings } from 'lucide-react';
+import { Plus, Users, BookOpen, Calendar, BarChart2, Settings, FileText, Folder, MessageSquare } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import Button from '../components/ui/Button';
 import Card, { CardContent, CardHeader } from '../components/ui/Card';
 import { courses, mentoringRequests } from '../data/mockData';
+import { blogApi } from '../services/blogApi';
+import { BlogPost, Category } from '../types/blog';
+import toast from 'react-hot-toast';
+
+// Composant pour gérer les catégories
+const BlogCategoriesManager: React.FC = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newCategory, setNewCategory] = useState({ name: '', description: '' });
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  
+  // Charger les catégories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await blogApi.getCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des catégories:', error);
+        toast.error('Erreur lors du chargement des catégories');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCategories();
+  }, []);
+  
+  // Ajouter une catégorie
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!newCategory.name.trim()) {
+      toast.error('Le nom de la catégorie est requis');
+      return;
+    }
+    
+    try {
+      const addedCategory = await blogApi.createCategory(newCategory);
+      setCategories([...categories, addedCategory]);
+      setNewCategory({ name: '', description: '' });
+      toast.success('Catégorie ajoutée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout de la catégorie:', error);
+      toast.error('Erreur lors de l\'ajout de la catégorie');
+    }
+  };
+  
+  // Mettre à jour une catégorie
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingCategory) return;
+    
+    try {
+      const updatedCategory = await blogApi.updateCategory(editingCategory._id, {
+        name: editingCategory.name,
+        description: editingCategory.description
+      });
+      
+      setCategories(categories.map(cat => 
+        cat._id === updatedCategory._id ? updatedCategory : cat
+      ));
+      
+      setEditingCategory(null);
+      toast.success('Catégorie mise à jour avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour de la catégorie:', error);
+      toast.error('Erreur lors de la mise à jour de la catégorie');
+    }
+  };
+  
+  // Supprimer une catégorie
+  const handleDeleteCategory = async (id: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette catégorie ?')) {
+      return;
+    }
+    
+    try {
+      await blogApi.deleteCategory(id);
+      setCategories(categories.filter(cat => cat._id !== id));
+      toast.success('Catégorie supprimée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la catégorie:', error);
+      toast.error('Erreur lors de la suppression de la catégorie');
+    }
+  };
+  
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Gestion des catégories</h2>
+      </div>
+      
+      {/* Formulaire d'ajout de catégorie */}
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <h3 className="text-lg font-medium mb-4">{editingCategory ? 'Modifier la catégorie' : 'Ajouter une catégorie'}</h3>
+        <form onSubmit={editingCategory ? handleUpdateCategory : handleAddCategory}>
+          <div className="grid grid-cols-1 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+              <input
+                type="text"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Nom de la catégorie"
+                value={editingCategory ? editingCategory.name : newCategory.name}
+                onChange={(e) => editingCategory 
+                  ? setEditingCategory({...editingCategory, name: e.target.value})
+                  : setNewCategory({...newCategory, name: e.target.value})
+                }
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Description de la catégorie"
+                value={editingCategory ? editingCategory.description || '' : newCategory.description}
+                onChange={(e) => editingCategory
+                  ? setEditingCategory({...editingCategory, description: e.target.value})
+                  : setNewCategory({...newCategory, description: e.target.value})
+                }
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            {editingCategory && (
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                onClick={() => setEditingCategory(null)}
+              >
+                Annuler
+              </button>
+            )}
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {editingCategory ? 'Mettre à jour' : 'Ajouter'}
+            </button>
+          </div>
+        </form>
+      </div>
+      
+      {/* Liste des catégories */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center">Chargement...</td>
+              </tr>
+            ) : categories.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center">
+                  <div className="flex flex-col items-center justify-center py-4">
+                    <p className="text-gray-500 mb-2">Aucune catégorie n'existe dans la base de données</p>
+                    <p className="text-sm text-gray-400">Utilisez le formulaire ci-dessus pour ajouter votre première catégorie</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              categories.map((category) => (
+                <tr key={category._id}>
+                  <td className="px-6 py-4 whitespace-nowrap">{category.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{category.slug}</td>
+                  <td className="px-6 py-4">{category.description || '-'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      onClick={() => setEditingCategory(category)}
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDeleteCategory(category._id)}
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Composant pour gérer les articles de blog
+const BlogPostsManager: React.FC = () => {
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  
+  // Charger les articles
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setLoading(true);
+        const data = await blogApi.getAllPosts(0, 100);
+        setPosts(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement des articles:', error);
+        toast.error('Erreur lors du chargement des articles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPosts();
+  }, []);
+  
+  // Supprimer un article
+  const handleDeletePost = async (slug: string) => {
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
+      return;
+    }
+    
+    try {
+      await blogApi.deletePost(slug);
+      setPosts(posts.filter(post => post.slug !== slug));
+      toast.success('Article supprimé avec succès');
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'article:', error);
+      toast.error('Erreur lors de la suppression de l\'article');
+    }
+  };
+  
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Gestion des articles</h2>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onClick={() => navigate('/blog/create')}
+        >
+          Nouvel article
+        </button>
+      </div>
+      
+      {/* Liste des articles */}
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Titre</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slug</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Catégorie</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de publication</th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">Chargement...</td>
+              </tr>
+            ) : posts.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-4 text-center">Aucun article trouvé</td>
+              </tr>
+            ) : (
+              posts.map((post) => (
+                <tr key={post._id}>
+                  <td className="px-6 py-4">{post.title}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{post.slug}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {typeof post.category === 'string' ? post.category : post.category.name}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {new Date(post.published_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      className="text-indigo-600 hover:text-indigo-900 mr-3"
+                      onClick={() => navigate(`/admin/blog/edit/${post.slug}`)}
+                    >
+                      Modifier
+                    </button>
+                    <button
+                      className="text-blue-600 hover:text-blue-900 mr-3"
+                      onClick={() => window.open(`/blog/${post.slug}`, '_blank')}
+                    >
+                      Voir
+                    </button>
+                    <button
+                      className="text-red-600 hover:text-red-900"
+                      onClick={() => handleDeletePost(post.slug)}
+                    >
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+// Composant pour gérer les commentaires
+const BlogCommentsManager: React.FC = () => {
+  const [comments, setComments] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Ici, vous devriez implémenter la logique pour charger et gérer les commentaires
+  // Pour l'instant, nous affichons juste un message indiquant que cette fonctionnalité est en cours de développement
+  
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Gestion des commentaires</h2>
+      </div>
+      
+      <div className="bg-white p-8 rounded-lg shadow text-center">
+        <p className="text-lg text-gray-600">La gestion des commentaires est en cours de développement.</p>
+        <p className="mt-2 text-gray-500">Cette fonctionnalité sera disponible prochainement.</p>
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'mentoring' | 'settings'>('overview');
+  // Rediriger vers la page de vue d'ensemble
+  return <Navigate to="/admin/overview" replace />;
+  const [activeTab, setActiveTab] = useState<'overview' | 'courses' | 'mentoring' | 'settings' | 'blog' | 'blog-categories' | 'blog-tags' | 'blog-comments'>('overview');
   
   // Stats for the overview
   const stats = {
@@ -82,12 +423,59 @@ const AdminDashboardPage: React.FC = () => {
                   <Settings size={18} className="mr-3" />
                   Paramètres
                 </button>
+                
+                {/* Section Blog */}
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Blog</h3>
+                  
+                  <Link
+                    to="/admin/blog/posts"
+                    className={`w-full flex items-center px-3 py-2 text-left rounded-md ${
+                      activeTab === 'blog' 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <FileText size={18} className="mr-3" />
+                    Articles
+                  </Link>
+                  
+                  <Link
+                    to="/admin/blog/categories"
+                    className={`w-full flex items-center px-3 py-2 text-left rounded-md ${
+                      activeTab === 'blog-categories' 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Folder size={18} className="mr-3" />
+                    Catégories
+                  </Link>
+                  
+
+                  
+                  <Link
+                    to="/admin/blog/comments"
+                    className={`w-full flex items-center px-3 py-2 text-left rounded-md ${
+                      activeTab === 'blog-comments' 
+                        ? 'bg-blue-50 text-blue-600' 
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <MessageSquare size={18} className="mr-3" />
+                    Commentaires
+                  </Link>
+                </div>
               </nav>
             </div>
           </div>
           
           {/* Main Content */}
           <div className="flex-1">
+            {activeTab === 'blog-categories' && <BlogCategoriesManager />}
+            {activeTab === 'blog-tags' && <BlogTagsManager />}
+            {activeTab === 'blog' && <BlogPostsManager />}
+            {activeTab === 'blog-comments' && <BlogCommentsManager />}
             {activeTab === 'overview' && (
               <div>
                 <h2 className="text-xl font-semibold mb-6">Vue d'ensemble</h2>
