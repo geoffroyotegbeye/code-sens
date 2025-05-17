@@ -1,12 +1,16 @@
 from datetime import datetime, time
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from .user import PyObjectId, UserInDB
 from bson import ObjectId
+
+# Importer la nouvelle implémentation de PyObjectId
+from ..utils.object_id_handler import PyObjectId
+from .user import UserInDB
 
 # Modèle pour les sessions de mentorat
 class MentoringSessionBase(BaseModel):
-    mentee_id: str
+    mentee_ids: List[str] = []  # Liste d'IDs de mentorés
+    mentee_id: Optional[str] = None  # Gardé pour rétrocompatibilité
     date: datetime
     duration: int  # Durée en minutes
     status: str = "pending"  # pending, confirmed, completed, cancelled
@@ -26,7 +30,7 @@ class MentoringSessionUpdate(BaseModel):
     cancellation_reason: Optional[str] = None
 
 class MentoringSessionInDB(MentoringSessionBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -52,7 +56,8 @@ class MentoringSessionInDB(MentoringSessionBase):
     }
 
 class MentoringSessionWithMentee(MentoringSessionInDB):
-    mentee: dict
+    mentee: dict  # Pour rétrocompatibilité (premier mentoré)
+    mentees: List[dict] = []  # Liste de tous les mentorés
     
     model_config = {
         "populate_by_name": True,
@@ -75,7 +80,7 @@ class AvailabilityUpdate(BaseModel):
     is_available: Optional[bool] = None
 
 class AvailabilityInDB(AvailabilityBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -113,7 +118,7 @@ class SpecificDateAvailabilityUpdate(BaseModel):
     available_slots: Optional[List[AvailableSlot]] = None
 
 class SpecificDateAvailabilityInDB(SpecificDateAvailabilityBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -137,10 +142,16 @@ class SpecificDateAvailabilityInDB(SpecificDateAvailabilityBase):
 
 # Modèle pour les mentorés
 class MenteeBase(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    topic: Optional[str] = None
+    message: Optional[str] = None
     bio: Optional[str] = None
     goals: Optional[str] = None
     skills_to_improve: Optional[List[str]] = None
+    status: str = "pending"  # pending, accepted, rejected
 
 class MenteeCreate(MenteeBase):
     pass
@@ -151,7 +162,7 @@ class MenteeUpdate(BaseModel):
     skills_to_improve: Optional[List[str]] = None
 
 class MenteeInDB(MenteeBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
@@ -198,7 +209,7 @@ class MentoringPricingUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 class MentoringPricingInDB(MentoringPricingBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(default_factory=ObjectId, alias="_id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     

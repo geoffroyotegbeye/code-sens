@@ -1,41 +1,46 @@
 export interface MentoringSession {
-  _id: string;
-  mentee_id: string;
+  id: string;
+  mentee_id?: string; // Pour rétrocompatibilité
+  mentee_ids?: string[]; // Nouveau champ pour plusieurs mentorés
+  mentees?: Mentee[]; // Pour stocker les données complètes des mentorés
   title: string;
   description: string;
   date: string;
-  start_time: string;
-  end_time: string;
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  meeting_url?: string;
+  duration: number; // Durée en minutes
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
   price: number;
-  payment_status: 'pending' | 'paid' | 'refunded';
-  created_at: string;
-  updated_at: string;
+  pricing_id: string;
+  meeting_url?: string;
+  cancellation_reason?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MentoringSessionCreate {
-  mentee_id: string;
-  title: string;
-  description: string;
+  mentee_id?: string; // Pour rétrocompatibilité
+  mentee_ids: string[]; // Liste d'IDs de mentorés
   date: string;
-  start_time: string;
-  end_time: string;
+  duration: number; // Durée en minutes
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  notes?: string;
   price: number;
+  pricing_id: string;
+  meeting_url?: string;
+  cancellation_reason?: string;
 }
 
 export interface MentoringSessionUpdate {
   title?: string;
   description?: string;
   date?: string;
-  start_time?: string;
-  end_time?: string;
-  status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
-  meeting_url?: string;
+  duration?: number; // Durée en minutes
+  status?: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   notes?: string;
   price?: number;
-  payment_status?: 'pending' | 'paid' | 'refunded';
+  pricing_id?: string;
+  meeting_url?: string;
+  cancellation_reason?: string;
 }
 
 export interface Availability {
@@ -74,15 +79,16 @@ export interface SpecificDateAvailability {
 }
 
 export interface Mentee {
-  _id: string;
+  id: string;
   user_id: string;
   full_name: string;
   email: string;
   profile_picture?: string;
   bio?: string;
   goals?: string;
-  skills_level?: 'beginner' | 'intermediate' | 'advanced';
+  skills_to_improve?: string[];
   interests?: string[];
+  status?: 'pending' | 'accepted' | 'rejected'; // Ajout du statut
   sessions_count: number;
   total_session_time: number; // en minutes
   created_at: string;

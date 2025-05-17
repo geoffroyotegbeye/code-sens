@@ -45,6 +45,8 @@ from ...services.mentoring_service import (
     get_mentee_by_user_id,
     create_mentee,
     update_mentee,
+    accept_mentee_request,
+    reject_mentee_request,
     
     # Tarifs
     get_all_pricing,
@@ -92,6 +94,19 @@ async def read_mentoring_session(
             raise HTTPException(status_code=403, detail="Accès non autorisé")
     
     return session
+
+@router.get("/sessions", response_model=List[MentoringSessionInDB])
+async def read_all_mentoring_sessions(
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Récupérer toutes les sessions de mentorat.
+    """
+    # Vérifier que l'utilisateur est admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    return await get_all_mentoring_sessions()
 
 @router.get("/sessions/mentee/{mentee_id}", response_model=List[MentoringSessionInDB])
 async def read_mentoring_sessions_by_mentee(
@@ -364,24 +379,6 @@ async def read_mentees(
     
     return await get_all_mentees()
 
-@router.get("/mentees/{mentee_id}", response_model=MenteeWithUser)
-async def read_mentee(
-    mentee_id: str,
-    current_user: UserInDB = Depends(get_current_user)
-):
-    """
-    Récupérer un mentoré par son ID.
-    """
-    # Vérifier que l'utilisateur est admin
-    if not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Accès non autorisé")
-    
-    mentee = await get_mentee_by_id(mentee_id)
-    if not mentee:
-        raise HTTPException(status_code=404, detail="Mentoré non trouvé")
-    
-    return mentee
-
 @router.get("/mentees/user/{user_id}", response_model=MenteeInDB)
 async def read_mentee_by_user_id(
     user_id: str,
@@ -400,14 +397,43 @@ async def read_mentee_by_user_id(
     
     return mentee
 
+@router.get("/mentees/{mentee_id}", response_model=MenteeWithUser)
+async def read_mentee(
+    mentee_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Récupérer un mentoré par son ID.
+    """
+    # Vérifier que l'utilisateur est admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    mentee = await get_mentee_by_id(mentee_id)
+    if not mentee:
+        raise HTTPException(status_code=404, detail="Mentoré non trouvé")
+    
+    return mentee
+
 @router.post("/mentees", response_model=MenteeInDB)
 async def create_mentee_profile(
     mentee: MenteeCreate,
     current_user: UserInDB = Depends(get_current_user)
 ):
     """
-    Créer un profil de mentoré.
+    Créer un profil de mentoré ou soumettre une demande de mentorat.
     """
+    # Si c'est une demande de mentorat simplifiée (sans user_id)
+    if not mentee.user_id:
+        # Utiliser l'ID de l'utilisateur actuel si disponible
+        if current_user:
+            mentee_data = mentee.model_dump(by_alias=True)
+            mentee_data["user_id"] = str(current_user.id)
+            return await create_mentee(mentee_data)
+        # Sinon, c'est une demande anonyme, on accepte juste les données telles quelles
+        return await create_mentee(mentee.model_dump(by_alias=True))
+    
+    # Pour les demandes traditionnelles avec user_id
     # Vérifier que l'utilisateur est admin ou l'utilisateur concerné
     if not current_user.is_admin and str(current_user.id) != mentee.user_id:
         raise HTTPException(status_code=403, detail="Accès non autorisé")
@@ -444,6 +470,54 @@ async def update_mentee_profile(
     
     if not updated_mentee:
         raise HTTPException(status_code=404, detail="Mentoré non trouvé")
+    
+    return updated_mentee
+
+@router.post("/mentees/{mentee_id}/accept", response_model=MenteeInDB)
+async def accept_request(
+    mentee_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Accepter une demande de mentorat.
+    """
+    # Vérifier que l'utilisateur est admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    # Vérifier si le mentoré existe
+    mentee = await get_mentee_by_id(mentee_id)
+    if not mentee:
+        raise HTTPException(status_code=404, detail="Demande de mentorat non trouvée")
+    
+    # Accepter la demande
+    updated_mentee = await accept_mentee_request(mentee_id)
+    if not updated_mentee:
+        raise HTTPException(status_code=404, detail="Demande de mentorat non trouvée")
+    
+    return updated_mentee
+
+@router.post("/mentees/{mentee_id}/reject", response_model=MenteeInDB)
+async def reject_request(
+    mentee_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """
+    Rejeter une demande de mentorat.
+    """
+    # Vérifier que l'utilisateur est admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Accès non autorisé")
+    
+    # Vérifier si le mentoré existe
+    mentee = await get_mentee_by_id(mentee_id)
+    if not mentee:
+        raise HTTPException(status_code=404, detail="Demande de mentorat non trouvée")
+    
+    # Rejeter la demande
+    updated_mentee = await reject_mentee_request(mentee_id)
+    if not updated_mentee:
+        raise HTTPException(status_code=404, detail="Demande de mentorat non trouvée")
     
     return updated_mentee
 

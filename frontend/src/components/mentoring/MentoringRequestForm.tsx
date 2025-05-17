@@ -1,148 +1,211 @@
 import React, { useState } from 'react';
-import { CalendarDays, Clock } from 'lucide-react';
+import { User, Mail, Phone, MessageSquare } from 'lucide-react';
 import Button from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { mentoringApi } from '../../services/mentoringApi';
 
 const MentoringRequestForm: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
+    fullName: user?.full_name || '',
+    email: user?.email || '',
+    phone: '',
     topic: '',
-    message: '',
-    preferredDate: '',
-    preferredTime: ''
+    message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.fullName || !formData.email || !formData.topic || !formData.message) {
+      toast.error('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Si l'utilisateur est connecté, utiliser son ID
+      if (isAuthenticated && user) {
+        await mentoringApi.mentees.createMentee({
+          user_id: user.id,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          topic: formData.topic,
+          message: formData.message
+        });
+      } else {
+        // Si l'utilisateur n'est pas connecté, créer un mentoré sans ID utilisateur
+        await mentoringApi.mentees.createMentee({
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          topic: formData.topic,
+          message: formData.message
+        });
+      }
+      
       setSubmitted(true);
-      setFormData({
-        topic: '',
-        message: '',
-        preferredDate: '',
-        preferredTime: ''
-      });
-    }, 1500);
+      toast.success('Votre demande de mentorat a été envoyée avec succès');
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de la demande:', error);
+      toast.error('Une erreur est survenue lors de l\'envoi de votre demande');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
+  
   if (submitted) {
     return (
-      <div className="text-center py-8 px-4">
-        <div className="bg-green-100 text-green-800 p-4 rounded-md mb-6 inline-block">
-          <svg className="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+      <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+        <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+          <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
-          <h3 className="text-lg font-medium">Demande envoyée avec succès!</h3>
         </div>
-        <p className="text-gray-600 mb-6">
-          Nous avons bien reçu votre demande de mentorat. Notre équipe vous contactera 
-          prochainement pour confirmer le rendez-vous.
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">Demande envoyée avec succès</h3>
+        <p className="text-gray-600 mb-4">
+          Merci pour votre demande de mentorat. Nous vous contacterons très prochainement par email ou par téléphone pour organiser une session.
         </p>
-        <Button onClick={() => setSubmitted(false)}>Faire une nouvelle demande</Button>
+        <Button 
+          onClick={() => setSubmitted(false)}
+          variant="outline"
+          className="mr-2"
+        >
+          Faire une nouvelle demande
+        </Button>
+        <Button 
+          onClick={() => navigate('/')}
+        >
+          Retour à l'accueil
+        </Button>
       </div>
     );
   }
-
+  
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-6">Demande de séance de mentorat</h3>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="flex items-center">
+            <User size={16} className="mr-1" />
+            Nom complet
+          </div>
+        </label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Votre nom complet"
+        />
+      </div>
       
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">
-            Sujet du mentorat
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="flex items-center">
+              <Mail size={16} className="mr-1" />
+              Email
+            </div>
           </label>
           <input
-            type="text"
-            id="topic"
-            name="topic"
-            value={formData.topic}
+            type="email"
+            id="email"
+            name="email"
+            value={formData.email}
             onChange={handleChange}
             required
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Ex: Développement de carrière, Revue de code, etc."
+            placeholder="votre@email.com"
           />
         </div>
         
         <div>
-          <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-            Détails de votre demande
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            <div className="flex items-center">
+              <Phone size={16} className="mr-1" />
+              Téléphone
+            </div>
           </label>
-          <textarea
-            id="message"
-            name="message"
-            value={formData.message}
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            value={formData.phone}
             onChange={handleChange}
-            required
-            rows={4}
             className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Expliquez votre besoin, vos attentes et tout contexte utile pour préparer la séance..."
+            placeholder="+33 6 XX XX XX XX"
           />
+          <p className="text-xs text-gray-500 mt-1">Nous vous contacterons par téléphone ou par email pour organiser la session.</p>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700 mb-1">
-              <div className="flex items-center">
-                <CalendarDays size={16} className="mr-1" />
-                Date souhaitée
-              </div>
-            </label>
-            <input
-              type="date"
-              id="preferredDate"
-              name="preferredDate"
-              value={formData.preferredDate}
-              onChange={handleChange}
-              required
-              min={new Date().toISOString().split('T')[0]}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+      </div>
+      
+      <div>
+        <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="flex items-center">
+            <MessageSquare size={16} className="mr-1" />
+            Sujet du mentorat
           </div>
-          
-          <div>
-            <label htmlFor="preferredTime" className="block text-sm font-medium text-gray-700 mb-1">
-              <div className="flex items-center">
-                <Clock size={16} className="mr-1" />
-                Heure souhaitée
-              </div>
-            </label>
-            <select
-              id="preferredTime"
-              name="preferredTime"
-              value={formData.preferredTime}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Sélectionnez une plage horaire</option>
-              <option value="9h-11h">Matin (9h-11h)</option>
-              <option value="11h-13h">Fin de matinée (11h-13h)</option>
-              <option value="14h-16h">Après-midi (14h-16h)</option>
-              <option value="16h-18h">Fin d'après-midi (16h-18h)</option>
-              <option value="18h-20h">Début de soirée (18h-20h)</option>
-            </select>
+        </label>
+        <input
+          type="text"
+          id="topic"
+          name="topic"
+          value={formData.topic}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Ex: Développement de carrière, Revue de code, etc."
+        />
+      </div>
+      
+      <div>
+        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="flex items-center">
+            <MessageSquare size={16} className="mr-1" />
+            Détails de votre demande
           </div>
-        </div>
-        
-        <div className="flex justify-end">
-          <Button type="submit" isLoading={isSubmitting} className='text-white'>
-            Envoyer ma demande
-          </Button>
-        </div>
-      </form>
-    </div>
+        </label>
+        <textarea
+          id="message"
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
+          required
+          rows={4}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Expliquez votre besoin, vos attentes et tout contexte utile pour préparer la séance..."
+        />
+      </div>
+      
+      <div className="pt-4">
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full"
+        >
+          {isSubmitting ? 'Envoi en cours...' : 'Envoyer ma demande de mentorat'}
+        </Button>
+      </div>
+    </form>
   );
 };
 

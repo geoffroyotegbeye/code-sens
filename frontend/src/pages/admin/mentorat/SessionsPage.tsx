@@ -1,37 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, User, Check, X, Edit, Trash2, Video, ExternalLink } from 'lucide-react';
+import { Calendar, Clock, User, Check, X, Trash2, Video, ExternalLink, Plus } from 'lucide-react';
 import AdminLayout from '../../../components/layout/AdminLayout';
 import Button from '../../../components/ui/Button';
 import { mentoringApi } from '../../../services/mentoringApi';
-import { MentoringSession } from '../../../types/mentoring';
+import { MentoringSession, Mentee } from '../../../types/mentoring';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import SessionForm from '../../../components/mentorat/SessionForm';
 
 const SessionsPage: React.FC = () => {
   const [sessions, setSessions] = useState<MentoringSession[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+  const [mentees, setMentees] = useState<Mentee[]>([]);
 
   useEffect(() => {
-    const fetchSessions = async () => {
+    const fetchData = async () => {
       setIsLoading(true);
       try {
-        const sessionsData = await mentoringApi.sessions.getAllSessions();
+        const [sessionsData, menteesData] = await Promise.all([
+          mentoringApi.sessions.getAllSessions(),
+          mentoringApi.mentees.getAllMentees()
+        ]);
         setSessions(sessionsData);
+        setMentees(menteesData);
         setError(null);
       } catch (err) {
-        console.error('Erreur lors du chargement des sessions:', err);
-        setError('Impossible de charger les sessions de mentorat');
-        toast.error('Impossible de charger les sessions de mentorat');
+        console.error('Erreur lors du chargement des données:', err);
+        setError('Impossible de charger les données');
+        toast.error('Impossible de charger les données');
       } finally {
         setIsLoading(false);
       }
     };
     
-    fetchSessions();
+    fetchData();
   }, []);
 
   const handleConfirmSession = async (id: string) => {
@@ -44,7 +51,7 @@ const SessionsPage: React.FC = () => {
       
       // Mettre à jour la liste des sessions
       setSessions(sessions.map(session => 
-        session._id === id ? updatedSession : session
+        session.id === id ? updatedSession : session
       ));
       
       toast.success('Session confirmée avec succès');
@@ -63,7 +70,7 @@ const SessionsPage: React.FC = () => {
       
       // Mettre à jour la liste des sessions
       setSessions(sessions.map(session => 
-        session._id === id ? updatedSession : session
+        session.id === id ? updatedSession : session
       ));
       
       toast.success('Session annulée avec succès');
@@ -82,7 +89,7 @@ const SessionsPage: React.FC = () => {
       
       // Mettre à jour la liste des sessions
       setSessions(sessions.map(session => 
-        session._id === id ? updatedSession : session
+        session.id === id ? updatedSession : session
       ));
       
       toast.success('Session marquée comme terminée');
@@ -99,12 +106,26 @@ const SessionsPage: React.FC = () => {
       await mentoringApi.sessions.deleteSession(id);
       
       // Mettre à jour la liste des sessions
-      setSessions(sessions.filter(session => session._id !== id));
+      setSessions(sessions.filter(session => session.id !== id));
       
       toast.success('Session supprimée avec succès');
     } catch (err) {
       console.error('Erreur lors de la suppression de la session:', err);
       toast.error('Erreur lors de la suppression de la session');
+    }
+  };
+  
+  const handleCreateSuccess = async () => {
+    setShowCreateForm(false);
+    setIsLoading(true);
+    try {
+      const sessionsData = await mentoringApi.sessions.getAllSessions();
+      setSessions(sessionsData);
+      toast.success('Session créée avec succès');
+    } catch (err) {
+      console.error('Erreur lors du rechargement des sessions:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,8 +137,20 @@ const SessionsPage: React.FC = () => {
     return format(new Date(dateString), 'EEEE d MMMM yyyy', { locale: fr });
   };
 
-  const formatTime = (timeString: string) => {
-    return timeString.substring(0, 5); // Format "HH:MM" from "HH:MM:SS"
+  // Calculer l'heure de début et de fin à partir de la date et de la durée
+  const getSessionTimes = (dateString: string, durationMinutes: number) => {
+    const date = new Date(dateString);
+    const startHour = date.getHours().toString().padStart(2, '0');
+    const startMinute = date.getMinutes().toString().padStart(2, '0');
+    
+    const endDate = new Date(date.getTime() + durationMinutes * 60000);
+    const endHour = endDate.getHours().toString().padStart(2, '0');
+    const endMinute = endDate.getMinutes().toString().padStart(2, '0');
+    
+    return {
+      startTime: `${startHour}:${startMinute}`,
+      endTime: `${endHour}:${endMinute}`
+    };
   };
 
   const getStatusBadge = (status: string) => {
@@ -165,8 +198,24 @@ const SessionsPage: React.FC = () => {
               <option value="cancelled">Annulées</option>
               <option value="completed">Terminées</option>
             </select>
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus size={16} className="mr-1" />
+              Nouvelle session
+            </Button>
           </div>
         </div>
+        
+        {showCreateForm && (
+          <div className="mb-6">
+            <SessionForm 
+              onSuccess={handleCreateSuccess} 
+              onCancel={() => setShowCreateForm(false)} 
+            />
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -208,13 +257,28 @@ const SessionsPage: React.FC = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredSessions.map((session) => (
-                  <tr key={session._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <User size={18} className="text-gray-400 mr-2" />
-                        <div className="text-sm font-medium text-gray-900">
-                          {session.mentee_id}
-                        </div>
+                  <tr key={session.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col">
+                        {/* Si nous avons des mentees dans la session (nouveau format) */}
+                        {session.mentees && session.mentees.length > 0 ? (
+                          session.mentees.map((mentee, index) => (
+                            <div key={index} className="flex items-center mb-1 last:mb-0">
+                              <User size={16} className="text-gray-400 mr-2 flex-shrink-0" />
+                              <div className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
+                                {mentee.full_name || mentee.email || `Mentoré #${mentee.id || 'inconnu'}`}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          /* Format rétrocompatible avec un seul mentoré */
+                          <div className="flex items-center">
+                            <User size={18} className="text-gray-400 mr-2" />
+                            <div className="text-sm font-medium text-gray-900">
+                              {mentees.find(m => m.id === session.mentee_id)?.full_name || session.mentee_id}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -225,7 +289,7 @@ const SessionsPage: React.FC = () => {
                         </div>
                         <div className="flex items-center text-sm text-gray-500 mt-1">
                           <Clock size={16} className="text-gray-400 mr-2" />
-                          {formatTime(session.start_time)} - {formatTime(session.end_time)}
+                          {getSessionTimes(session.date, session.duration).startTime} - {getSessionTimes(session.date, session.duration).endTime}
                         </div>
                       </div>
                     </td>
@@ -238,15 +302,14 @@ const SessionsPage: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex flex-col">
-                        <div className="text-sm text-gray-900">{session.price} €</div>
-                        <div className="mt-1">{getPaymentStatusBadge(session.payment_status)}</div>
+                        <div className="text-sm text-gray-900">{session.duration} minutes</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex space-x-2">
                         {session.status === 'pending' && (
                           <button
-                            onClick={() => handleConfirmSession(session._id)}
+                            onClick={() => handleConfirmSession(session.id)}
                             className="text-green-600 hover:text-green-900"
                             title="Confirmer la session"
                           >
@@ -255,7 +318,7 @@ const SessionsPage: React.FC = () => {
                         )}
                         {(session.status === 'pending' || session.status === 'confirmed') && (
                           <button
-                            onClick={() => handleCancelSession(session._id)}
+                            onClick={() => handleCancelSession(session.id)}
                             className="text-red-600 hover:text-red-900"
                             title="Annuler la session"
                           >
@@ -274,7 +337,7 @@ const SessionsPage: React.FC = () => {
                               <Video size={18} />
                             </a>
                             <button
-                              onClick={() => handleCompleteSession(session._id)}
+                              onClick={() => handleCompleteSession(session.id)}
                               className="text-blue-600 hover:text-blue-900"
                               title="Marquer comme terminée"
                             >
@@ -283,14 +346,14 @@ const SessionsPage: React.FC = () => {
                           </>
                         )}
                         <Link
-                          to={`/admin/mentorat/sessions/${session._id}`}
+                          to={`/admin/mentorat/sessions/${session.id}`}
                           className="text-indigo-600 hover:text-indigo-900"
                           title="Voir les détails"
                         >
                           <ExternalLink size={18} />
                         </Link>
                         <button
-                          onClick={() => handleDeleteSession(session._id)}
+                          onClick={() => handleDeleteSession(session.id)}
                           className="text-red-600 hover:text-red-900"
                           title="Supprimer la session"
                         >

@@ -168,6 +168,22 @@ export const menteesApi = {
   // Récupérer un mentoré par l'ID de l'utilisateur
   getMenteeByUserId: async (userId: string): Promise<Mentee> => {
     return fetchApi<Mentee>(`/mentoring/mentees/user/${userId}`);
+  },
+  
+  // Créer un nouveau mentoré
+  createMentee: async (menteeData: { user_id: string; bio?: string; goals?: string; skills_to_improve?: string[] }): Promise<Mentee> => {
+    return fetchApi<Mentee>('/mentoring/mentees', {
+      method: 'POST',
+      body: JSON.stringify(menteeData)
+    });
+  },
+  
+  // Mettre à jour un mentoré
+  updateMentee: async (id: string, menteeData: { bio?: string; goals?: string; skills_to_improve?: string[] }): Promise<Mentee> => {
+    return fetchApi<Mentee>(`/mentoring/mentees/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(menteeData)
+    });
   }
 };
 

@@ -9,7 +9,6 @@ import CourseDetailPage from './pages/CourseDetailPage';
 import MentoringPage from './pages/MentoringPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import UserDashboardPage from './pages/UserDashboardPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import CreateCoursePage from './pages/CreateCoursePage';
 import BlogPage from './pages/BlogPage';
@@ -17,6 +16,8 @@ import BlogPostPage from './pages/BlogPostPage';
 import CreateBlogPostPage from './pages/CreateBlogPostPage';
 import EditBlogPostPage from './pages/EditBlogPostPage';
 import AboutPage from './pages/AboutPage';
+import UserDashboardPage from './pages/UserDashboardPage';
+import MentoringVideoCallPage from './pages/MentoringVideoCallPage';
 
 // Pages admin du blog
 import BlogPostsPage from './pages/admin/BlogPostsPage';
@@ -27,10 +28,10 @@ import BlogPostPreviewPage from './pages/admin/BlogPostPreviewPage';
 // Pages admin du mentorat
 import {
   SessionsPage,
-  DisponibilitesPage,
   VideoCallPage,
   TarifsPage,
-  MentoresPage
+  MentoresPage,
+  DemandesPage
 } from './pages/admin/mentorat';
 
 // Pages admin générales
@@ -40,25 +41,36 @@ import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminMentoringPage from './pages/admin/AdminMentoringPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 
-// Protected route component
-const ProtectedRoute: React.FC<{ 
-  children: React.ReactNode; 
-  requireAdmin?: boolean;
-}> = ({ children, requireAdmin = false }) => {
-  const { isAuthenticated, isAdmin } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" />;
-  }
-  
-  if (requireAdmin && !isAdmin) {
-    return <Navigate to="/dashboard" />;
-  }
-  
-  return <>{children}</>;
-};
-
 function App() {
+  // Protected route component - défini à l'intérieur du composant App pour avoir accès à l'AuthProvider
+  const ProtectedRoute: React.FC<{ 
+    children: React.ReactNode; 
+    requireAdmin?: boolean;
+  }> = ({ children, requireAdmin = false }) => {
+    const { isAuthenticated, isAdmin, loading } = useAuth();
+    
+    // Afficher un écran de chargement pendant la vérification de l'authentification
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      );
+    }
+
+    // Rediriger vers la page de connexion si l'utilisateur n'est pas authentifié
+    if (!isAuthenticated) {
+      return <Navigate to="/login" />;
+    }
+
+    // Rediriger vers le tableau de bord utilisateur si l'accès admin est requis mais l'utilisateur n'est pas admin
+    if (requireAdmin && !isAdmin) {
+      return <Navigate to="/dashboard" />;
+    }
+
+    return <>{children}</>;
+  };
+
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -202,14 +214,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/admin/mentorat/disponibilites" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <DisponibilitesPage />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Route vers la page de disponibilités supprimée */}
           <Route 
             path="/admin/mentorat/videocall" 
             element={
@@ -242,8 +247,26 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="/admin/mentorat/demandes" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <DemandesPage />
+              </ProtectedRoute>
+            } 
+          />
           
           {/* Fallback Route */}
+          {/* Route pour la visioconférence */}
+          <Route 
+            path="/mentoring/videocall/:sessionId" 
+            element={
+              <ProtectedRoute>
+                <MentoringVideoCallPage />
+              </ProtectedRoute>
+            } 
+          />
+          
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>

@@ -1,30 +1,10 @@
 from datetime import datetime
 from typing import Optional, Any, Literal
-from pydantic import BaseModel, Field, EmailStr, GetJsonSchemaHandler
-from pydantic.json_schema import JsonSchemaValue
+from pydantic import BaseModel, Field, EmailStr
 from bson import ObjectId
 
-class PyObjectId(str):
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type, _handler):
-        from pydantic_core import core_schema
-        return core_schema.union_schema([
-            core_schema.is_instance_schema(ObjectId),
-            core_schema.chain_schema([
-                core_schema.str_schema(),
-                core_schema.no_info_plain_validator_function(cls.validate)
-            ])
-        ])
-        
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid ObjectId")
-        return str(v)
-        
-    @classmethod
-    def __get_pydantic_json_schema__(cls, schema_generator: GetJsonSchemaHandler) -> JsonSchemaValue:
-        return schema_generator.get_schema_for_type(str)
+# Importer la nouvelle implémentation de PyObjectId
+from ..utils.object_id_handler import PyObjectId
 
 class UserBase(BaseModel):
     email: EmailStr
@@ -59,11 +39,13 @@ class UserInDB(UserBase):
     }
 
 class User(UserBase):
-    id: str
+    id: PyObjectId = Field(alias="_id")
     created_at: datetime
     updated_at: datetime
     
     model_config = {
         "from_attributes": True,
+        "arbitrary_types_allowed": True,
+        "populate_by_name": True,
         "json_encoders": {ObjectId: str}
     }

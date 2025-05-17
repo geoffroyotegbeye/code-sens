@@ -14,7 +14,6 @@ import {
   Menu,
   X,
   Video,
-  Clock,
   DollarSign,
   UserCheck
 } from 'lucide-react';
@@ -70,14 +69,14 @@ const AdminSidebar: React.FC = () => {
   
   const mentoratNavItems = [
     {
+      path: '/admin/mentorat/demandes',
+      label: 'Demandes',
+      icon: <MessageSquare size={20} />
+    },
+    {
       path: '/admin/mentorat/sessions',
       label: 'Sessions',
       icon: <Calendar size={20} />
-    },
-    {
-      path: '/admin/mentorat/disponibilites',
-      label: 'Disponibilités',
-      icon: <Clock size={20} />
     },
     {
       path: '/admin/mentorat/videocall',

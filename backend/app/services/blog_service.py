@@ -1,9 +1,10 @@
 from bson import ObjectId
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 from ..db.database import get_database
 from ..models.blog import BlogPostCreate, BlogPostInDB, BlogPostUpdate, BlogPostWithAuthor
 from ..services.user_service import get_user_by_id
+from ..services.upload_service import delete_unused_images, extract_image_urls_from_content, delete_file
 
 async def get_all_blog_posts(skip: int = 0, limit: int = 10, category: str = None) -> List[BlogPostWithAuthor]:
     db = await get_database()
@@ -87,29 +88,82 @@ async def create_blog_post(post: BlogPostCreate) -> BlogPostInDB:
 async def update_blog_post(slug: str, post_update: BlogPostUpdate) -> Optional[BlogPostInDB]:
     db = await get_database()
     
-    # Filtrer les champs non nuls
-    update_data = {k: v for k, v in post_update.model_dump().items() if v is not None}
+    # Vérifier si le post existe
+    existing_post = await db.blog_posts.find_one({"slug": slug})
+    if not existing_post:
+        return None
+    
+    # Préparer les données à mettre à jour
+    update_data = post_update.model_dump(exclude_unset=True)
     update_data["updated_at"] = datetime.utcnow()
     
+    # Si le contenu a été modifié, supprimer les images qui ne sont plus utilisées
+    if "content" in update_data:
+        old_content = existing_post.get("content", "")
+        new_content = update_data["content"]
+        deleted_images = await delete_unused_images(old_content, new_content)
+        if deleted_images:
+            print(f"Images supprimées lors de la mise à jour de l'article {slug}: {deleted_images}")
+    
+    # Si l'image de couverture a été modifiée, supprimer l'ancienne image
+    if "cover_image" in update_data and existing_post.get("cover_image") != update_data["cover_image"]:
+        old_cover_image = existing_post.get("cover_image")
+        if old_cover_image and old_cover_image.startswith("/static/uploads/"):
+            success = await delete_file(old_cover_image)
+            if success:
+                print(f"Image de couverture supprimée: {old_cover_image}")
+    
     # Mettre à jour le post
-    result = await db.blog_posts.update_one(
+    await db.blog_posts.update_one(
         {"slug": slug},
         {"$set": update_data}
     )
     
-    if result.modified_count == 0:
+    # Vérifier si la mise à jour a réussi
+    if "slug" in update_data and update_data["slug"] != slug:
+        # Si le slug a été modifié, chercher avec le nouveau slug
+        updated_post = await db.blog_posts.find_one({"slug": update_data["slug"]})
+    else:
+        updated_post = await db.blog_posts.find_one({"slug": slug})
+    
+    if not updated_post:
         return None
     
     # Récupérer le post mis à jour
-    updated_post = await db.blog_posts.find_one({"slug": slug})
     updated_post["_id"] = str(updated_post["_id"])
     
     return BlogPostInDB(**updated_post)
 
 async def delete_blog_post(slug: str) -> bool:
     db = await get_database()
+    
+    # Récupérer le post avant de le supprimer pour obtenir les URLs des images
+    post = await db.blog_posts.find_one({"slug": slug})
+    if not post:
+        return False
+    
+    # Supprimer le post
     result = await db.blog_posts.delete_one({"slug": slug})
-    return result.deleted_count > 0
+    
+    if result.deleted_count > 0:
+        # Supprimer l'image de couverture si elle existe
+        cover_image = post.get("cover_image")
+        if cover_image and cover_image.startswith("/static/uploads/"):
+            await delete_file(cover_image)
+            print(f"Image de couverture supprimée: {cover_image}")
+        
+        # Extraire et supprimer toutes les images du contenu
+        content = post.get("content", "")
+        image_urls = extract_image_urls_from_content(content)
+        
+        for url in image_urls:
+            success = await delete_file(url)
+            if success:
+                print(f"Image supprimée du contenu: {url}")
+        
+        return True
+    
+    return False
 
 async def get_blog_categories() -> List[str]:
     db = await get_database()
