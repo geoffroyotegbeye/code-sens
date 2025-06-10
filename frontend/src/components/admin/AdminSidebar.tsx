@@ -15,15 +15,18 @@ import {
   X,
   Video,
   DollarSign,
-  UserCheck
+  UserCheck,
+  PlusCircle,
+  List
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
-  const [blogMenuOpen, setBlogMenuOpen] = useState(true);
-  const [mentoratMenuOpen, setMentoratMenuOpen] = useState(true);
+  const [blogMenuOpen, setBlogMenuOpen] = useState(false);
+  const [mentoratMenuOpen, setMentoratMenuOpen] = useState(false);
+  const [coursesMenuOpen, setCoursesMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   
   const mainNavItems = [
@@ -31,11 +34,6 @@ const AdminSidebar: React.FC = () => {
       path: '/admin/overview',
       label: 'Vue d\'ensemble',
       icon: <BarChart2 size={20} />
-    },
-    {
-      path: '/admin/courses',
-      label: 'Formations',
-      icon: <BookOpen size={20} />
     },
     {
       path: '/admin/users',
@@ -46,6 +44,19 @@ const AdminSidebar: React.FC = () => {
       path: '/admin/settings',
       label: 'Paramètres',
       icon: <Settings size={20} />
+    }
+  ];
+  
+  const coursesNavItems = [
+    {
+      path: '/admin/courses',
+      label: 'Toutes les formations',
+      icon: <List size={20} />
+    },
+    {
+      path: '/admin/courses/categories',
+      label: 'Catégories',
+      icon: <Folder size={20} />
     }
   ];
   
@@ -107,12 +118,20 @@ const AdminSidebar: React.FC = () => {
     return location.pathname.includes('/admin/mentorat');
   };
 
+  const isInCoursesSection = () => {
+    return location.pathname.includes('/admin/courses');
+  };
+
   const toggleBlogMenu = () => {
     setBlogMenuOpen(!blogMenuOpen);
   };
   
   const toggleMentoratMenu = () => {
     setMentoratMenuOpen(!mentoratMenuOpen);
+  };
+
+  const toggleCoursesMenu = () => {
+    setCoursesMenuOpen(!coursesMenuOpen);
   };
 
   const toggleMobileSidebar = () => {
@@ -149,7 +168,7 @@ const AdminSidebar: React.FC = () => {
           {/* Header */}
           <div className="p-4 border-b flex items-center justify-between">
             <Link to="/admin/overview" className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-600">Code & Sens</h1>
+              <h1 className="text-xl font-bold text-blue-600">WebRichesse</h1>
             </Link>
             <button 
               onClick={toggleMobileSidebar}
@@ -189,6 +208,41 @@ const AdminSidebar: React.FC = () => {
                   <span className="font-medium">{item.label}</span>
                 </Link>
               ))}
+              
+              {/* Formations section with dropdown */}
+              <div className="mt-6">
+                <button
+                  onClick={toggleCoursesMenu}
+                  className={`flex items-center justify-between w-full px-3 py-3 rounded-md transition-colors ${
+                    isInCoursesSection() ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <BookOpen size={20} className="mr-3" />
+                    <span className="font-medium">Formations</span>
+                  </div>
+                  {coursesMenuOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                </button>
+                
+                {coursesMenuOpen && (
+                  <div className="ml-6 mt-1 space-y-1">
+                    {coursesNavItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center px-3 py-2 rounded-md transition-colors ${
+                          isActive(item.path)
+                            ? 'bg-blue-50 text-blue-600'
+                            : 'text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        <span className="mr-3">{item.icon}</span>
+                        <span className="font-medium">{item.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
               
               {/* Blog section with dropdown */}
               <div className="mt-6">

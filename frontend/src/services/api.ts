@@ -1,7 +1,44 @@
 // URL de base de l'API
 const API_URL = 'http://localhost:8000/api/v1';
 
-console.log('URL du backend configurée:', API_URL);
+import axios from 'axios';
+
+// Création de l'instance axios
+export const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Intercepteur pour ajouter le token d'authentification
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Intercepteur pour gérer les erreurs d'authentification
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Supprimer le token et rediriger vers la page de connexion
+      localStorage.removeItem('token');
+      window.dispatchEvent(new Event('unauthorized'));
+    }
+    return Promise.reject(error);
+  }
+);
+
+console.log('Backend URL:', API_URL);
 
 // Événements personnalisés pour l'authentification
 export const AUTH_EVENTS = {

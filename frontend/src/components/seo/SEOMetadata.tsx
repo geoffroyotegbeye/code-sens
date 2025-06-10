@@ -25,7 +25,7 @@ const SEOMetadata: React.FC<SEOMetadataProps> = ({
   ogType = 'website',
   canonicalUrl,
   twitterCard = 'summary_large_image',
-  author = 'Code & Sens',
+  author = 'WebRichesse',
   publishedTime,
   modifiedTime,
 }) => {
@@ -88,7 +88,7 @@ const SEOMetadata: React.FC<SEOMetadataProps> = ({
       updateMetaTag('og:url', fullCanonicalUrl, true);
     }
     updateMetaTag('og:image', socialImage, true);
-    updateMetaTag('og:site_name', 'Code & Sens', true);
+    updateMetaTag('og:site_name', 'WebRichesse', true);
     
     // Métadonnées Twitter
     updateMetaTag('twitter:card', twitterCard, true);

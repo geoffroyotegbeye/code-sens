@@ -1,6 +1,8 @@
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from fastapi.responses import JSONResponse
+from datetime import datetime
+from bson import ObjectId
 
 from app.models.category import Category, CategoryCreate, CategoryUpdate
 from app.services.category_service import (
@@ -12,67 +14,64 @@ from app.services.category_service import (
     delete_category
 )
 from app.api.deps import get_current_user, get_current_admin_user
+from app.models.user import User
+from app.db.database import get_database
 
 router = APIRouter()
 
 @router.get("/", response_model=List[Category])
-async def read_categories():
-    """Récupère toutes les catégories."""
-    return await get_all_categories()
+async def read_categories(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    active_only: bool = False
+):
+    """Récupérer la liste des catégories de blog"""
+    return await get_all_categories(skip=skip, limit=limit, active_only=active_only)
 
 @router.get("/{category_id}", response_model=Category)
 async def read_category(category_id: str):
-    """Récupère une catégorie par son ID."""
+    """Récupérer une catégorie de blog par son ID"""
     category = await get_category_by_id(category_id)
-    if category is None:
+    if not category:
         raise HTTPException(status_code=404, detail="Catégorie non trouvée")
     return category
 
 @router.get("/slug/{slug}", response_model=Category)
 async def read_category_by_slug(slug: str):
-    """Récupère une catégorie par son slug."""
+    """Récupérer une catégorie de blog par son slug"""
     category = await get_category_by_slug(slug)
-    if category is None:
+    if not category:
         raise HTTPException(status_code=404, detail="Catégorie non trouvée")
     return category
 
-@router.post("/", response_model=Category, status_code=status.HTTP_201_CREATED)
-async def create_category_endpoint(
+@router.post("/", response_model=Category)
+async def create_category(
     category: CategoryCreate,
-    current_user: dict = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Crée une nouvelle catégorie. Réservé aux administrateurs."""
-    try:
-        return await create_category(category)
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Créer une nouvelle catégorie de blog"""
+    return await create_category(category)
 
 @router.put("/{category_id}", response_model=Category)
-async def update_category_endpoint(
+async def update_category(
     category_id: str,
     category_update: CategoryUpdate,
-    current_user: dict = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Met à jour une catégorie existante. Réservé aux administrateurs."""
-    updated_category = await update_category(category_id, category_update)
-    if updated_category is None:
+    """Mettre à jour une catégorie de blog"""
+    category = await get_category_by_id(category_id)
+    if not category:
         raise HTTPException(status_code=404, detail="Catégorie non trouvée")
-    return updated_category
+    return await update_category(category_id, category_update)
 
-@router.delete("/{category_id}", response_model=bool)
-async def delete_category_endpoint(
+@router.delete("/{category_id}")
+async def delete_category(
     category_id: str,
-    current_user: dict = Depends(get_current_admin_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
-    """Supprime une catégorie. Réservé aux administrateurs."""
-    try:
-        success = await delete_category(category_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Catégorie non trouvée")
-        return JSONResponse(content={"success": True})
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    """Supprimer une catégorie de blog"""
+    category = await get_category_by_id(category_id)
+    if not category:
+        raise HTTPException(status_code=404, detail="Catégorie non trouvée")
+    await delete_category(category_id)
+    return {"message": "Catégorie supprimée avec succès"}

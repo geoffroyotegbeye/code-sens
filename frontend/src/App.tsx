@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
+import CourseLearnPage from './pages/CourseLearnPage';
 import MentoringPage from './pages/MentoringPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -40,6 +41,8 @@ import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminMentoringPage from './pages/admin/AdminMentoringPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminCourseCategoriesPage from './pages/admin/AdminCourseCategoriesPage';
+import AdminCourseModulesPage from './pages/admin/AdminCourseModulesPage';
 
 function App() {
   // Protected route component - défini à l'intérieur du composant App pour avoir accès à l'AuthProvider
@@ -79,6 +82,11 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:courseId" element={<CourseDetailPage />} />
+          <Route path="/courses/:courseId/learn" element={
+            <ProtectedRoute>
+              <CourseLearnPage />
+            </ProtectedRoute>
+          } />
           <Route path="/mentoring" element={<MentoringPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -142,6 +150,14 @@ function App() {
             element={
               <ProtectedRoute requireAdmin>
                 <AdminCoursesPage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/courses/categories" 
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminCourseCategoriesPage />
               </ProtectedRoute>
             } 
           />
@@ -266,6 +282,8 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          
+          <Route path="/admin/courses/:courseId/modules" element={<AdminCourseModulesPage />} />
           
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>

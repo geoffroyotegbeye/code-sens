@@ -7,7 +7,7 @@ const MentoringPage: React.FC = () => {
   return (
     <MainLayout>
       {/* Hero Section */}
-      <section className="bg-blue-900 text-white py-16">
+      <section className="bg-blue-900 text-white py-16 pt-32">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">

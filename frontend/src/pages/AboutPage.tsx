@@ -11,7 +11,7 @@ const AboutPage: React.FC = () => {
         <meta name="description" content="Découvrez mon parcours, mes compétences et mes projets" />
       </Helmet>
 
-      <div className="bg-gradient-to-b from-blue-900 to-blue-800 text-white py-20">
+      <div className="bg-gradient-to-b from-blue-900 to-blue-800 text-white py-20 pt-32">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">Geoffroy Otegbeye</h1>
           <p className="text-xl md:text-2xl text-blue-100 max-w-3xl">

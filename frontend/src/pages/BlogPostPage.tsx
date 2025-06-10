@@ -47,8 +47,8 @@ const BlogPostPage: React.FC = () => {
   const handleShare = () => {
     if (navigator.share && window.location.href) {
       navigator.share({
-        title: post?.title || 'Article Code&Sens',
-        text: post?.excerpt || 'Découvrez cet article sur Code&Sens',
+        title: post?.title || 'Article WebRichesse',
+        text: post?.excerpt || 'Découvrez cet article sur WebRichesse',
         url: window.location.href,
       }).catch(err => {
         console.error('Erreur lors du partage:', err);
@@ -121,25 +121,25 @@ const BlogPostPage: React.FC = () => {
         <>
           <SEOMetadata 
             title={post.title}
-            description={post.excerpt || `${post.title} - Code & Sens`}
+            description={post.excerpt || `${post.title} - WebRichesse`}
             keywords={keywords}
             ogImage={post.cover_image}
             ogType="article"
             canonicalUrl={`/blog/${slug}`}
-            author={post.author?.full_name || 'Code & Sens'}
+            author={post.author?.full_name || 'WebRichesse'}
             publishedTime={publishedDate}
             modifiedTime={modifiedDate}
           />
           
           <BlogPostSchema
             title={post.title}
-            description={post.excerpt || `${post.title} - Code & Sens`}
+            description={post.excerpt || `${post.title} - WebRichesse`}
             datePublished={publishedDate}
             dateModified={modifiedDate}
-            authorName={post.author?.full_name || 'Code & Sens'}
+            authorName={post.author?.full_name || 'WebRichesse'}
             imageUrl={post.cover_image}
             url={postUrl}
-            siteName="Code & Sens"
+            siteName="WebRichesse"
             keywords={keywords}
             category={typeof post.category === 'string' ? post.category : post.category?.name}
           />

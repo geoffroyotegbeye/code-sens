@@ -3,8 +3,11 @@ import { useLocation } from 'react-router-dom';
 import { Search, Filter, X } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import CourseList from '../components/courses/CourseList';
-import { courses, categories } from '../data/mockData';
-import { Course } from '../types';
+import { courseService } from '../services/courseApi';
+import { categoryService } from '../services/categoryApi';
+import { Course } from '../types/course';
+import { Category } from '../types/category';
+import { toast } from 'react-hot-toast';
 
 const CoursesPage: React.FC = () => {
   const location = useLocation();
@@ -13,22 +16,46 @@ const CoursesPage: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [filteredCourses, setFilteredCourses] = useState<Course[]>(courses);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [coursesData, categoriesData] = await Promise.all([
+        courseService.getAllCourses(),
+        categoryService.getAllCategories()
+      ]);
+      setCourses(coursesData);
+      setCategories(categoriesData);
+      setFilteredCourses(coursesData);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+      toast.error('Une erreur est survenue lors du chargement des formations');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   useEffect(() => {
     const filtered = courses.filter(course => {
       const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          course.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          course.instructor.toLowerCase().includes(searchTerm.toLowerCase());
+                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesCategory = selectedCategory ? course.category === selectedCategory : true;
+      const matchesCategory = selectedCategory ? course.category_id === selectedCategory : true;
       
       return matchesSearch && matchesCategory;
     });
     
     setFilteredCourses(filtered);
-  }, [searchTerm, selectedCategory]);
+  }, [searchTerm, selectedCategory, courses]);
   
   // Set category from URL parameter
   useEffect(() => {
@@ -59,7 +86,7 @@ const CoursesPage: React.FC = () => {
   return (
     <MainLayout>
       {/* Header */}
-      <section className="bg-blue-900 text-white py-12">
+      <section className="bg-blue-900 text-white py-12 pt-32">
         <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold mb-2">Catalogue de formations</h1>
           <p className="text-blue-100 max-w-3xl">
@@ -87,60 +114,43 @@ const CoursesPage: React.FC = () => {
             </div>
             
             {/* Filter Toggle (Mobile) */}
-            <div className="md:hidden">
-              <button
-                onClick={toggleFilters}
-                className="flex items-center px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                <Filter size={18} className="mr-2" />
-                Filtres
-                {hasActiveFilters && (
-                  <span className="ml-2 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    !
-                  </span>
-                )}
-              </button>
-            </div>
+            <button
+              onClick={toggleFilters}
+              className="md:hidden flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+            >
+              <Filter size={18} className="mr-2" />
+              Filtres
+            </button>
             
             {/* Categories (Desktop) */}
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden md:flex flex-wrap gap-2">
               {categories.map(category => (
                 <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.name)}
+                  key={category._id}
+                  onClick={() => handleCategoryChange(category._id)}
                   className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                    selectedCategory === category.name
+                    selectedCategory === category._id
                       ? 'bg-blue-600 text-white'
-                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {category.name}
                 </button>
               ))}
-              
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="flex items-center px-3 py-1 text-sm text-red-600 bg-white rounded-full hover:bg-red-50"
-                >
-                  <X size={14} className="mr-1" />
-                  Effacer
-                </button>
-              )}
             </div>
           </div>
           
-          {/* Mobile Filters (Expandable) */}
+          {/* Mobile Filters */}
           {showFilters && (
             <div className="mt-4 p-4 bg-white rounded-md shadow-sm md:hidden">
               <h3 className="font-medium mb-3">Catégories</h3>
               <div className="flex flex-wrap gap-2 mb-4">
                 {categories.map(category => (
                   <button
-                    key={category.id}
-                    onClick={() => handleCategoryChange(category.name)}
+                    key={category._id}
+                    onClick={() => handleCategoryChange(category._id)}
                     className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                      selectedCategory === category.name
+                      selectedCategory === category._id
                         ? 'bg-blue-600 text-white'
                         : 'bg-gray-100 text-gray-700'
                     }`}
@@ -167,7 +177,12 @@ const CoursesPage: React.FC = () => {
       {/* Course List */}
       <section className="py-12">
         <div className="container mx-auto px-4">
-          {filteredCourses.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-900 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Chargement des formations...</p>
+            </div>
+          ) : filteredCourses.length > 0 ? (
             <>
               <div className="mb-6">
                 <p className="text-gray-600">

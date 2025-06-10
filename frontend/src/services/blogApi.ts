@@ -1,4 +1,4 @@
-import { BlogPost, BlogPostCreate, BlogPostUpdate, Category } from '../types/blog';
+import { BlogPost, BlogPostCreate, BlogPostUpdate } from '../types/blog';
 
 const API_URL = 'http://localhost:8000/api/v1';
 
@@ -87,53 +87,6 @@ export const blogApi = {
       method: 'DELETE',
     });
   },
-  
-  // Gestion des catégories
-  getCategories: async (): Promise<Category[]> => {
-    return fetchApi<Category[]>('/categories');
-  },
-  
-  getCategoryBySlug: async (slug: string): Promise<Category> => {
-    return fetchApi<Category>(`/categories/slug/${slug}`);
-  },
-  
-  getCategoryById: async (id: string): Promise<Category> => {
-    return fetchApi<Category>(`/categories/${id}`);
-  },
-  
-  createCategory: async (category: { name: string; description?: string }): Promise<Category> => {
-    // Générer le slug à partir du nom
-    const slug = category.name.toLowerCase().replace(/\s+/g, '-');
-    
-    return fetchApi<Category>('/categories', {
-      method: 'POST',
-      body: JSON.stringify({
-        ...category,
-        slug
-      }),
-    });
-  },
-  
-  updateCategory: async (id: string, category: { name?: string; description?: string }): Promise<Category> => {
-    // Si le nom est mis à jour, générer un nouveau slug
-    const updateData: any = { ...category };
-    if (category.name) {
-      updateData.slug = category.name.toLowerCase().replace(/\s+/g, '-');
-    }
-    
-    return fetchApi<Category>(`/categories/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(updateData),
-    });
-  },
-  
-  deleteCategory: async (id: string): Promise<boolean> => {
-    return fetchApi<boolean>(`/categories/${id}`, {
-      method: 'DELETE',
-    });
-  },
-  
-
   
   // Gestion des commentaires
   getCommentsByPostId: async (postId: string): Promise<any[]> => {

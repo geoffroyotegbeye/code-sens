@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from pathlib import Path
-from .api.api import api_router
+from .api.v1.api import api_router
 from .core.config import settings
 from .db.database import connect_to_mongo, close_mongo_connection
 
@@ -44,7 +44,7 @@ async def shutdown_db_client():
 
 @app.get("/")
 async def root():
-    return {"message": "Bienvenue sur l'API Code&Sens"}
+    return {"message": "Bienvenue sur l'API WebRichesse"}
 
 if __name__ == "__main__":
     import uvicorn

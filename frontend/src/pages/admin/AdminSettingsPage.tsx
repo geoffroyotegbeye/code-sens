@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 
 const AdminSettingsPage: React.FC = () => {
   const [generalSettings, setGeneralSettings] = useState({
-    siteName: 'Code & Sens',
+    siteName: 'WebRichesse',
     siteDescription: 'Plateforme de formation et de mentorat pour développeurs',
     contactEmail: 'contact@code-sens.fr',
     phoneNumber: '+33 1 23 45 67 89',
@@ -18,7 +18,7 @@ const AdminSettingsPage: React.FC = () => {
     smtpPort: '587',
     smtpUsername: 'notifications@code-sens.fr',
     smtpPassword: '••••••••••••',
-    senderName: 'Code & Sens',
+    senderName: 'WebRichesse',
     senderEmail: 'no-reply@code-sens.fr'
   });
 

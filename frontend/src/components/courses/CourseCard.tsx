@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Users, Star } from 'lucide-react';
-import { Course } from '../../types';
+import { Course } from '../../types/course';
 import Card from '../ui/Card';
 
 interface CourseCardProps {
@@ -11,7 +11,7 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   return (
     <Card hoverable className="h-full flex flex-col">
-      <Link to={`/courses/${course.id}`} className="block">
+      <Link to={`/courses/${course._id}`} className="block">
         <div className="relative h-48 overflow-hidden">
           <img 
             src={course.coverImage} 
@@ -29,7 +29,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         </div>
       </Link>
       <div className="p-4 flex-grow flex flex-col">
-        <Link to={`/courses/${course.id}`} className="block mb-2">
+        <Link to={`/courses/${course._id}`} className="block mb-2">
           <p className="text-gray-600 line-clamp-2 text-sm mb-3">
             {course.description}
           </p>

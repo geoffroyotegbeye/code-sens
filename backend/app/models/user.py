@@ -8,18 +8,19 @@ from ..utils.object_id_handler import PyObjectId
 
 class UserBase(BaseModel):
     email: EmailStr
-    full_name: str
+    is_active: bool = True
     is_admin: bool = False
-    role: str = "user"  # Valeurs possibles: "user", "admin"
+    full_name: Optional[str] = None
+    role: str = "user"  # Par défaut, l'utilisateur a le rôle "user"
 
 class UserCreate(UserBase):
     password: str
 
 class UserInDB(UserBase):
-    id: PyObjectId = Field(default_factory=lambda: str(ObjectId()), alias="_id")
+    id: PyObjectId = Field(alias="_id")
     hashed_password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = datetime.utcnow()
+    updated_at: datetime = datetime.utcnow()
     
     model_config = {
         "populate_by_name": True,
@@ -35,6 +36,9 @@ class UserInDB(UserBase):
                 "created_at": "2023-01-01T00:00:00",
                 "updated_at": "2023-01-01T00:00:00"
             }
+        },
+        "json_encoders": {
+            PyObjectId: str
         }
     }
 

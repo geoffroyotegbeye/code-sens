@@ -1,6 +1,6 @@
-# Code&Sens - Plateforme de Formation en Ligne
+# WebRichesse - Plateforme de Formation en Ligne
 
-Code&Sens est une plateforme éducative proposant des formations et du mentorat dans le domaine du développement web et de la technologie.
+WebRichesse est une plateforme éducative proposant des formations et du mentorat dans le domaine du développement web et de la technologie.
 
 ## Structure du Projet
 
