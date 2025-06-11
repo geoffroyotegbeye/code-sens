@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const AdminSettingsPage: React.FC = () => {
   const [generalSettings, setGeneralSettings] = useState({
     siteName: 'WebRichesse',
-    siteDescription: 'Plateforme de formation et de mentorat pour développeurs',
+    siteDescription: 'Plateforme de formation pour développeurs',
     contactEmail: 'contact@code-sens.fr',
     phoneNumber: '+33 1 23 45 67 89',
     address: '123 Avenue des Développeurs, 75000 Paris'

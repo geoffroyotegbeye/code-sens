@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   BarChart2, 
   BookOpen, 
   Users, 
-  Calendar, 
   Settings, 
   FileText, 
   Folder, 
@@ -13,10 +12,6 @@ import {
   ChevronRight,
   Menu,
   X,
-  Video,
-  DollarSign,
-  UserCheck,
-  PlusCircle,
   List
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -25,9 +20,18 @@ const AdminSidebar: React.FC = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [blogMenuOpen, setBlogMenuOpen] = useState(false);
-  const [mentoratMenuOpen, setMentoratMenuOpen] = useState(false);
   const [coursesMenuOpen, setCoursesMenuOpen] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  
+  // Ouvrir automatiquement le menu correspondant à la section actuelle
+  useEffect(() => {
+    if (isInBlogSection()) {
+      setBlogMenuOpen(true);
+    }
+    if (isInCoursesSection()) {
+      setCoursesMenuOpen(true);
+    }
+  }, []);
   
   const mainNavItems = [
     {
@@ -39,18 +43,13 @@ const AdminSidebar: React.FC = () => {
       path: '/admin/users',
       label: 'Utilisateurs',
       icon: <Users size={20} />
-    },
-    {
-      path: '/admin/settings',
-      label: 'Paramètres',
-      icon: <Settings size={20} />
     }
   ];
   
   const coursesNavItems = [
     {
       path: '/admin/courses',
-      label: 'Toutes les formations',
+      label: 'Formations',
       icon: <List size={20} />
     },
     {
@@ -78,33 +77,7 @@ const AdminSidebar: React.FC = () => {
     }
   ];
   
-  const mentoratNavItems = [
-    {
-      path: '/admin/mentorat/demandes',
-      label: 'Demandes',
-      icon: <MessageSquare size={20} />
-    },
-    {
-      path: '/admin/mentorat/sessions',
-      label: 'Sessions',
-      icon: <Calendar size={20} />
-    },
-    {
-      path: '/admin/mentorat/videocall',
-      label: 'Visioconférence',
-      icon: <Video size={20} />
-    },
-    {
-      path: '/admin/mentorat/tarifs',
-      label: 'Tarifs',
-      icon: <DollarSign size={20} />
-    },
-    {
-      path: '/admin/mentorat/mentores',
-      label: 'Mentorés',
-      icon: <UserCheck size={20} />
-    }
-  ];
+
 
   const isActive = (path: string) => {
     return location.pathname === path;
@@ -114,9 +87,7 @@ const AdminSidebar: React.FC = () => {
     return location.pathname.includes('/admin/blog');
   };
   
-  const isInMentoratSection = () => {
-    return location.pathname.includes('/admin/mentorat');
-  };
+
 
   const isInCoursesSection = () => {
     return location.pathname.includes('/admin/courses');
@@ -124,14 +95,20 @@ const AdminSidebar: React.FC = () => {
 
   const toggleBlogMenu = () => {
     setBlogMenuOpen(!blogMenuOpen);
+    // Si on ouvre le menu blog, on ferme le menu cours pour éviter d'avoir trop de menus ouverts
+    if (!blogMenuOpen) {
+      setCoursesMenuOpen(false);
+    }
   };
   
-  const toggleMentoratMenu = () => {
-    setMentoratMenuOpen(!mentoratMenuOpen);
-  };
+
 
   const toggleCoursesMenu = () => {
     setCoursesMenuOpen(!coursesMenuOpen);
+    // Si on ouvre le menu cours, on ferme le menu blog pour éviter d'avoir trop de menus ouverts
+    if (!coursesMenuOpen) {
+      setBlogMenuOpen(false);
+    }
   };
 
   const toggleMobileSidebar = () => {
@@ -168,7 +145,7 @@ const AdminSidebar: React.FC = () => {
           {/* Header */}
           <div className="p-4 border-b flex items-center justify-between">
             <Link to="/admin/overview" className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-600">WebRichesse</h1>
+              <h1 className="text-xl font-bold text-blue-900">WebRichesse</h1>
             </Link>
             <button 
               onClick={toggleMobileSidebar}
@@ -178,7 +155,7 @@ const AdminSidebar: React.FC = () => {
             </button>
           </div>
           
-          {/* Admin info */}
+          {/* Logo et titre */}
           <div className="p-4 border-b">
             <div className="flex items-center">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
@@ -279,40 +256,21 @@ const AdminSidebar: React.FC = () => {
                 )}
               </div>
               
-              {/* Mentorat section with dropdown */}
+              {/* Paramètres - placé tout en bas */}
               <div className="mt-6">
-                <button
-                  onClick={toggleMentoratMenu}
-                  className={`flex items-center justify-between w-full px-3 py-3 rounded-md transition-colors ${
-                    isInMentoratSection() ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-100'
+                <Link
+                  to="/admin/settings"
+                  className={`flex items-center px-3 py-3 rounded-md transition-colors ${
+                    isActive('/admin/settings')
+                      ? 'bg-blue-50 text-blue-600'
+                      : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <div className="flex items-center">
-                    <UserCheck size={20} className="mr-3" />
-                    <span className="font-medium">Mentorat</span>
-                  </div>
-                  {mentoratMenuOpen ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                </button>
-                
-                {mentoratMenuOpen && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {mentoratNavItems.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center px-3 py-2 rounded-md transition-colors ${
-                          isActive(item.path)
-                            ? 'bg-blue-50 text-blue-600'
-                            : 'text-gray-700 hover:bg-gray-100'
-                        }`}
-                      >
-                        <span className="mr-3">{item.icon}</span>
-                        <span className="font-medium">{item.label}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                  <Settings size={20} className="mr-3" />
+                  <span className="font-medium">Paramètres</span>
+                </Link>
               </div>
+
             </nav>
           </div>
           

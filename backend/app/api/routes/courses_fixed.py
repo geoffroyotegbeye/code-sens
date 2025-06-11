@@ -117,20 +117,20 @@ async def add_module(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     # Calculer le nouvel ordre si non spécifié
     if not module.order:
         module.order = len(course.get("modules", [])) + 1
-
+    
     module_dict = module.dict()
     module_dict["created_at"] = datetime.utcnow()
     module_dict["updated_at"] = datetime.utcnow()
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$push": {"modules": module_dict}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 
@@ -145,18 +145,18 @@ async def update_module(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     if module_index >= len(course.get("modules", [])):
         raise HTTPException(status_code=404, detail="Module non trouvé")
-
+    
     update_data = module_update.dict(exclude_unset=True)
     update_data["updated_at"] = datetime.utcnow()
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$set": {f"modules.{module_index}": update_data}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 
@@ -170,10 +170,10 @@ async def delete_module(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     if module_index >= len(course.get("modules", [])):
         raise HTTPException(status_code=404, detail="Module non trouvé")
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$unset": {f"modules.{module_index}": ""}}
@@ -182,7 +182,7 @@ async def delete_module(
         {"_id": ObjectId(course_id)},
         {"$pull": {"modules": None}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 
@@ -198,24 +198,24 @@ async def add_lesson(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     if module_index >= len(course.get("modules", [])):
         raise HTTPException(status_code=404, detail="Module non trouvé")
-
+    
     # Calculer le nouvel ordre si non spécifié
     if not lesson.order:
         module = course["modules"][module_index]
         lesson.order = len(module.get("lessons", [])) + 1
-
+    
     lesson_dict = lesson.dict()
     lesson_dict["created_at"] = datetime.utcnow()
     lesson_dict["updated_at"] = datetime.utcnow()
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$push": {f"modules.{module_index}.lessons": lesson_dict}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 
@@ -231,22 +231,22 @@ async def update_lesson(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     if module_index >= len(course.get("modules", [])):
         raise HTTPException(status_code=404, detail="Module non trouvé")
-
+    
     module = course["modules"][module_index]
     if lesson_index >= len(module.get("lessons", [])):
         raise HTTPException(status_code=404, detail="Leçon non trouvée")
-
+    
     update_data = lesson_update.dict(exclude_unset=True)
     update_data["updated_at"] = datetime.utcnow()
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$set": {f"modules.{module_index}.lessons.{lesson_index}": update_data}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 
@@ -261,14 +261,14 @@ async def delete_lesson(
     course = await db.courses.find_one({"_id": ObjectId(course_id)})
     if not course:
         raise HTTPException(status_code=404, detail="Cours non trouvé")
-
+    
     if module_index >= len(course.get("modules", [])):
         raise HTTPException(status_code=404, detail="Module non trouvé")
-
+    
     module = course["modules"][module_index]
     if lesson_index >= len(module.get("lessons", [])):
         raise HTTPException(status_code=404, detail="Leçon non trouvée")
-
+    
     await db.courses.update_one(
         {"_id": ObjectId(course_id)},
         {"$unset": {f"modules.{module_index}.lessons.{lesson_index}": ""}}
@@ -277,7 +277,7 @@ async def delete_lesson(
         {"_id": ObjectId(course_id)},
         {"$pull": {f"modules.{module_index}.lessons": None}}
     )
-
+    
     updated_course = await db.courses.find_one({"_id": ObjectId(course_id)})
     return CourseInDB(**updated_course)
 

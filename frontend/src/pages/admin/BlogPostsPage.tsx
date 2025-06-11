@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { blogApi } from '../../services/blogApi';
-import { BlogPost } from '../../types/blog';
+import { BlogPost, Category } from '../../types/blog';
 import { uploadApi } from '../../services/uploadApi';
 import toast from 'react-hot-toast';
 import { Edit, Eye, Trash, Plus, Search, Filter } from 'lucide-react';
@@ -15,7 +15,7 @@ const BlogPostsPage: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<BlogPost | null>(null);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const navigate = useNavigate();
   
   // Charger les articles et les catégories
@@ -31,11 +31,8 @@ const BlogPostsPage: React.FC = () => {
         setPosts(postsData);
         setFilteredPosts(postsData);
         
-        // Extraire les noms de catégories uniques
-        const uniqueCategories = Array.from(new Set(
-          categoriesData.map(cat => cat.name)
-        ));
-        setCategories(uniqueCategories);
+        // Stocker les catégories complètes
+        setCategories(categoriesData);
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         toast.error('Erreur lors du chargement des données');
@@ -161,8 +158,8 @@ const BlogPostsPage: React.FC = () => {
                 >
                   <option value="">Toutes les catégories</option>
                   {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
+                    <option key={category._id} value={category.name}>
+                      {category.name}
                     </option>
                   ))}
                 </select>
@@ -221,9 +218,16 @@ const BlogPostsPage: React.FC = () => {
                       <div className="text-sm text-gray-500 truncate max-w-xs">{post.slug}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {typeof post.category === 'string' ? post.category : post.category.name}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {typeof post.category === 'string' ? post.category : post.category.name}
+                        </span>
+                        {typeof post.category !== 'string' && post.category.slug && (
+                          <span className="text-xs text-gray-500 mt-1">
+                            Slug: {post.category.slug}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                       <div className="text-sm text-gray-500">

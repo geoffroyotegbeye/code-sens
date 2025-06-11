@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LogOut, BookOpen, Users, Code, MessageSquare, ChevronDown, Settings, User, LayoutDashboard } from 'lucide-react';
+import { Menu, X, LogOut, BookOpen, MessageSquare, ChevronDown, Settings, User, LayoutDashboard } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import Button from '../ui/Button';
 
@@ -30,11 +30,6 @@ const Header: React.FC = () => {
       name: 'Formations', 
       path: '/courses',
       icon: <BookOpen size={18} className="mr-2" />
-    },
-    { 
-      name: 'Mentorat', 
-      path: '/mentoring',
-      icon: <Users size={18} className="mr-2" />
     },
     { 
       name: 'Blog', 
@@ -74,7 +69,7 @@ const Header: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-teal-600">
+            <span className="text-2xl font-bold text-blue-900">
               WebRichesse
             </span>
           </Link>
@@ -191,7 +186,7 @@ const Header: React.FC = () => {
               {isAuthenticated ? (
                 <div className="space-y-2">
                   <div className="px-3 py-2 flex items-center">
-                    <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mr-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-900 text-white flex items-center justify-center mr-3">
                       {getUserInitials()}
                     </div>
                     <span className="font-medium">{user?.full_name}</span>

@@ -36,17 +36,6 @@ export interface Chapter {
   completed?: boolean;
 }
 
-export interface MentoringRequest {
-  id: string;
-  userId: string;
-  userName: string;
-  email: string;
-  topic: string;
-  message: string;
-  status: 'pending' | 'approved' | 'rejected';
-  preferredDate?: string;
-  createdAt: string;
-}
 
 export interface Category {
   id: string;

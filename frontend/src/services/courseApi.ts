@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Course, Module, Lesson } from '../types/course';
+import { Course, Lesson } from '../types/course';
 
 interface CourseCreateData {
   title: string;
@@ -18,6 +18,11 @@ export const courseService = {
   // Formations
   getAllCourses: async (): Promise<Course[]> => {
     const response = await api.get('/courses');
+    return response.data;
+  },
+
+  getUserEnrolledCourses: async (): Promise<Course[]> => {
+    const response = await api.get('/courses/user/enrolled');
     return response.data;
   },
 

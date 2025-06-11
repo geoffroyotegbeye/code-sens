@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BarChart2, BookOpen, Users, Calendar, Settings, FileText, Folder, Tag, MessageSquare, PlusCircle } from 'lucide-react';
+import { BarChart2, BookOpen, Users, Settings, FileText, Folder, Tag, MessageSquare, PlusCircle } from 'lucide-react';
 
 const AdminNav: React.FC = () => {
   const location = useLocation();
@@ -21,11 +21,6 @@ const AdminNav: React.FC = () => {
       path: '/admin/users',
       label: 'Utilisateurs',
       icon: <Users size={18} />
-    },
-    {
-      path: '/admin/mentoring',
-      label: 'Demandes de mentorat',
-      icon: <Calendar size={18} />
     },
     {
       path: '/admin/settings',

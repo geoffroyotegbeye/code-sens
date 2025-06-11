@@ -7,7 +7,7 @@ import HomePage from './pages/HomePage';
 import CoursesPage from './pages/CoursesPage';
 import CourseDetailPage from './pages/CourseDetailPage';
 import CourseLearnPage from './pages/CourseLearnPage';
-import MentoringPage from './pages/MentoringPage';
+
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -18,7 +18,7 @@ import CreateBlogPostPage from './pages/CreateBlogPostPage';
 import EditBlogPostPage from './pages/EditBlogPostPage';
 import AboutPage from './pages/AboutPage';
 import UserDashboardPage from './pages/UserDashboardPage';
-import MentoringVideoCallPage from './pages/MentoringVideoCallPage';
+
 
 // Pages admin du blog
 import BlogPostsPage from './pages/admin/BlogPostsPage';
@@ -26,20 +26,13 @@ import BlogCategoriesPage from './pages/admin/BlogCategoriesPage';
 import BlogCommentsPage from './pages/admin/BlogCommentsPage';
 import BlogPostPreviewPage from './pages/admin/BlogPostPreviewPage';
 
-// Pages admin du mentorat
-import {
-  SessionsPage,
-  VideoCallPage,
-  TarifsPage,
-  MentoresPage,
-  DemandesPage
-} from './pages/admin/mentorat';
+
 
 // Pages admin générales
 import AdminOverviewPage from './pages/admin/AdminOverviewPage';
 import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
-import AdminMentoringPage from './pages/admin/AdminMentoringPage';
+
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import AdminCourseCategoriesPage from './pages/admin/AdminCourseCategoriesPage';
 import AdminCourseModulesPage from './pages/admin/AdminCourseModulesPage';
@@ -87,7 +80,7 @@ function App() {
               <CourseLearnPage />
             </ProtectedRoute>
           } />
-          <Route path="/mentoring" element={<MentoringPage />} />
+          
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/blog" element={<BlogPage />} />
@@ -169,14 +162,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/admin/mentoring" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <AdminMentoringPage />
-              </ProtectedRoute>
-            } 
-          />
+          
           <Route 
             path="/admin/settings" 
             element={
@@ -221,67 +207,10 @@ function App() {
             } 
           />
           
-          {/* Routes admin pour la gestion du mentorat */}
-          <Route 
-            path="/admin/mentorat/sessions" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <SessionsPage />
-              </ProtectedRoute>
-            } 
-          />
-          {/* Route vers la page de disponibilités supprimée */}
-          <Route 
-            path="/admin/mentorat/videocall" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <VideoCallPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/mentorat/videocall/:sessionId" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <VideoCallPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/mentorat/tarifs" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <TarifsPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/mentorat/mentores" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <MentoresPage />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/admin/mentorat/demandes" 
-            element={
-              <ProtectedRoute requireAdmin>
-                <DemandesPage />
-              </ProtectedRoute>
-            } 
-          />
+
           
           {/* Fallback Route */}
-          {/* Route pour la visioconférence */}
-          <Route 
-            path="/mentoring/videocall/:sessionId" 
-            element={
-              <ProtectedRoute>
-                <MentoringVideoCallPage />
-              </ProtectedRoute>
-            } 
-          />
+
           
           <Route path="/admin/courses/:courseId/modules" element={<AdminCourseModulesPage />} />
           

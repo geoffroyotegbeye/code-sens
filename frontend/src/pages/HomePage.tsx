@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Code, Users, Sparkles, BookOpen, Briefcase, Trophy, Star, Clock, Shield } from 'lucide-react';
+import { ArrowRight, Sparkles, BookOpen, Briefcase, Trophy, Star } from 'lucide-react';
 import MainLayout from '../components/layout/MainLayout';
 import Button from '../components/ui/Button';
 import CourseList from '../components/courses/CourseList';
@@ -37,7 +37,7 @@ const HomePage: React.FC = () => {
     {
       icon: <Briefcase className="w-6 h-6" />,
       title: "Accompagnement Carrière",
-      description: "Conseils et mentorat pour votre développement professionnel"
+      description: "Conseils pour votre développement professionnel"
     },
     {
       icon: <Star className="w-6 h-6" />,
@@ -195,7 +195,7 @@ const HomePage: React.FC = () => {
               <ul className="space-y-4 mb-8">
                 <li className="flex items-center text-gray-700">
                   <Sparkles className="w-5 h-5 text-teal-500 mr-3" />
-                  Mentorat personnalisé avec des expertes
+                  Accompagnement personnalisé avec des expertes
                 </li>
                 <li className="flex items-center text-gray-700">
                   <Sparkles className="w-5 h-5 text-teal-500 mr-3" />

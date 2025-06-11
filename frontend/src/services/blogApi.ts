@@ -1,4 +1,4 @@
-import { BlogPost, BlogPostCreate, BlogPostUpdate } from '../types/blog';
+import { BlogPost, BlogPostCreate, BlogPostUpdate, Category } from '../types/blog';
 
 const API_URL = 'http://localhost:8000/api/v1';
 
@@ -102,6 +102,34 @@ export const blogApi = {
   
   deleteComment: async (commentId: string): Promise<boolean> => {
     return fetchApi<boolean>(`${BASE_URL}/comments/${commentId}`, {
+      method: 'DELETE',
+    });
+  },
+  
+  // Récupérer toutes les catégories de blog
+  getCategories: async (): Promise<Category[]> => {
+    return fetchApi<Category[]>(`${BASE_URL}/categories`);
+  },
+  
+  // Créer une nouvelle catégorie
+  createCategory: async (categoryData: { name: string; description?: string }): Promise<Category> => {
+    return fetchApi<Category>(`${BASE_URL}/categories`, {
+      method: 'POST',
+      body: JSON.stringify(categoryData),
+    });
+  },
+  
+  // Mettre à jour une catégorie
+  updateCategory: async (categoryId: string, categoryData: { name?: string; description?: string }): Promise<Category> => {
+    return fetchApi<Category>(`${BASE_URL}/categories/${categoryId}`, {
+      method: 'PUT',
+      body: JSON.stringify(categoryData),
+    });
+  },
+  
+  // Supprimer une catégorie
+  deleteCategory: async (categoryId: string): Promise<void> => {
+    return fetchApi<void>(`${BASE_URL}/categories/${categoryId}`, {
       method: 'DELETE',
     });
   }

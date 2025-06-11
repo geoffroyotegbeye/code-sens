@@ -86,7 +86,7 @@ const AdminOverviewPage: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <input type="checkbox" className="mr-3" />
-                  <span>Répondre aux demandes de mentorat (3)</span>
+                  <span>Répondre aux demandes d'accompagnement (3)</span>
                 </div>
                 <div className="flex items-center">
                   <input type="checkbox" className="mr-3" />

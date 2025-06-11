@@ -42,8 +42,8 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-sm">
-              Votre partenaire pour l'excellence en développement web. Formations de qualité, 
-              mentorat personnalisé et opportunités de carrière pour tous.
+              Votre partenaire pour l'excellence en développement web. Formations de qualité
+              et opportunités de carrière pour tous.
             </p>
             <div className="flex space-x-4">
               {socialLinks.map((social, index) => (

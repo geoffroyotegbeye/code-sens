@@ -3,7 +3,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { blogApi } from '../../services/blogApi';
 import { Category } from '../../types/blog';
 import toast from 'react-hot-toast';
-import { Edit, Trash2, Save, Plus, Search, Filter, X, Loader } from 'lucide-react';
+import { Edit, Trash2, Save, Plus, Search, X, Loader } from 'lucide-react';
 
 const BlogCategoriesPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -258,7 +258,7 @@ const BlogCategoriesPage: React.FC = () => {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
-                <tr>
+                <tr key="loading-row">
                   <td colSpan={4} className="px-6 py-4 text-center">
                     <div className="flex justify-center items-center">
                       <Loader size={24} className="animate-spin text-blue-600 mr-2" />
@@ -267,7 +267,7 @@ const BlogCategoriesPage: React.FC = () => {
                   </td>
                 </tr>
               ) : filteredCategories.length === 0 ? (
-                <tr>
+                <tr key="empty-row">
                   <td colSpan={4} className="px-6 py-4 text-center">
                     {searchTerm ? 'Aucune catégorie ne correspond à votre recherche' : 'Aucune catégorie trouvée'}
                   </td>
